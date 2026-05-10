@@ -78,20 +78,24 @@ export default function Login() {
   };
 
   return (
-    <Box className="h-screen flex items-center justify-center bg-gradient-to-tr from-green-800 to-green-700">
-      <Paper elevation={12} variant="elevation">
+    <Box className="h-screen flex items-center justify-center bg-linear-to-tr from-sky-400 to-sky-100">
+      <Paper elevation={12} variant="elevation" className="rounded-2xl">
         <Container
           component="main"
-          className="border-4 md:border-8 bg-slate-100 border-orange-600 w-[300px] md:w-[450px]"
+          className="border-4 md:border-8 bg-slate-100 border-orange-600 w-[350px] md:w-[500px] pt-4"
         >
           <Typography
-            className="flex flex-col justify-center items-center mt-6"
+            className="flex flex-col justify-center items-center mt-4 p-4"
             variant="h5"
           >
-            <img src="logo.png" width="100px" alt="FASTCARE LOGO" />
-            <span className="uppercase font-bold text-green-700 md:text-3xl">
-              FAST CARE DERMALYN
-            </span>
+
+            <Typography className="uppercase font-bold text-sky-500 md:text-2xl text-lg text-center">
+              Dr. Nahida Islam Nipa's
+            </Typography>
+            <Typography className="uppercase font-bold text-purple-700 md:text-xl text-lg text-center mb-3">Chamber</Typography>
+            <Typography className="uppercase font-bold text-slate-400 md:text-xl text-sm text-center">
+              Dermatology & Skin Care
+            </Typography>
           </Typography>
 
           <Box
@@ -107,7 +111,7 @@ export default function Login() {
               <LockOutlinedIcon />
             </Avatar>
             <Typography className="text-xl text-green-700 uppercase font-bold">
-              Log In Form
+              Login Form
             </Typography>
 
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -115,11 +119,11 @@ export default function Login() {
                 margin="normal"
                 required
                 fullWidth
-                label="Employee Id"
+                label="Username"
                 variant="standard"
-                {...register("employeeId")}
-                error={!!errors.employeeId}
-                helperText={errors.employeeId?.message}
+                {...register("userName")}
+                error={!!errors.userName}
+                helperText={errors.userName?.message}
               />
 
               <FormControl sx={{ width: "100%", mb: 2 }} variant="standard">
@@ -154,7 +158,7 @@ export default function Login() {
                 type="submit"
                 fullWidth
                 variant="contained"
-                color="success"
+                color="secondary"
                 sx={{ mt: 3, mb: 5, fontWeight: "bold" }}
                 disabled={isLoading}
                 startIcon={
@@ -174,6 +178,6 @@ export default function Login() {
 type FormData = z.infer<typeof schema>;
 
 const schema = z.object({
-  employeeId: z.string().min(6, "Invalid Id"),
+  userName: z.string().min(3, "Invalid Username"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });

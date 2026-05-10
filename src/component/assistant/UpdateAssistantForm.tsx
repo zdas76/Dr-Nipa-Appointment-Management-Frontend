@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
     Box,
     Button,
-    Divider,
     FormControl,
     InputLabel,
     MenuItem,
@@ -13,33 +12,31 @@ import {
     Typography
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { z } from "zod";
-import { useAssistantRegistrationMutation } from "../../retux/api/authApi";
+import { useUpdateAssistantMutation } from "../../retux/api/authApi";
 import { toast } from "sonner";
 import { getResponse } from "../../utils/getResponst";
+import type { TAssistant } from "../../types/User";
 
 const schema = z.object({
-    userName: z.string().min(3, "User name must be at least 3 characters"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    role: z.enum(["ASSISTANT", "ADMIN", "DOCTOR"]),
-    name: z.string().min(3, "Name must be at least 3 characters"),
-    fatherName: z.string().min(1, "Father's name is required"),
-    motherName: z.string().min(1, "Mother's name is required"),
-    dateOfBirth: z.string().min(1, "Date of birth is required"),
-    sex: z.enum(["MALE", "FEMALE", "OTHER"]),
-    contactNumber: z.string().min(11, "Invalid contact number"),
+    name: z.string().optional().nullable(),
+    fatherName: z.string().optional().nullable(),
+    motherName: z.string().optional().nullable(),
+    dateOfBirth: z.string().optional().nullable(),
+    sex: z.enum(["MALE", "FEMALE", "OTHER"]).optional().nullable(),
+    contactNumber: z.string().optional().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
 
-interface CreateAssistantFormProps {
+interface UpdateAssistantFormProps {
+    data: TAssistant;
     onCancel?: () => void;
 }
 
-export default function CreateAssistantForm({ onCancel }: CreateAssistantFormProps) {
-
-    const [assistantRegistration, { isLoading }] = useAssistantRegistrationMutation()
+export default function UpdateAssistantForm({ data, onCancel }: UpdateAssistantFormProps) {
+    const [updateAssistant, { isLoading }] = useUpdateAssistantMutation();
 
     const {
         register,
@@ -49,84 +46,44 @@ export default function CreateAssistantForm({ onCancel }: CreateAssistantFormPro
     } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
-            role: "ASSISTANT",
-            sex: "MALE",
+            name: data?.name || "",
+            fatherName: data?.fatherName || "",
+            motherName: data?.motherName || "",
+            dateOfBirth: data?.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : "",
+            sex: data?.sex,
+            contactNumber: data?.contactNumber || "",
         }
     });
 
-    const onSubmit = async (data: FormData) => {
-        const res = await assistantRegistration(data)
-        const result = await getResponse(res)
-        console.log(result);
-        if (result?.success) {
-            toast.success(result.message);
-            onCancel?.();
-        } else {
-            toast.error(result?.message);
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            console.log("Zod Validation Errors:", errors);
+        }
+    }, [errors]);
+
+    const onSubmit = async (formData: FormData) => {
+        console.log("formData :>> ", formData);
+        console.log("validation errors :>> ", errors);
+        try {
+            const res = await updateAssistant({ id: data.id, ...formData });
+            const result = await getResponse(res);
+            if (result?.success) {
+                onCancel?.();
+            }
+        } catch (error) {
+            toast.error("An error occurred while updating");
+            console.error(error);
         }
     };
 
     return (
-        <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
+        <Paper elevation={0} sx={{ p: 0, borderRadius: 4 }}>
             <Typography variant="h5" sx={{ fontWeight: 800, mb: 3, color: "#1e293b" }}>
-                Add New Assistant
+                Update Assistant Info
             </Typography>
 
             <form onSubmit={handleSubmit(onSubmit)}>
                 <Stack spacing={4}>
-                    {/* User Account Information */}
-                    <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "#3b82f6", mb: 2, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                            Account Information
-                        </Typography>
-                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Username"
-                                variant="outlined"
-                                {...register("userName")}
-                                error={!!errors.userName}
-                                helperText={errors.userName?.message}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Email Address"
-                                type="email"
-                                variant="outlined"
-                                {...register("email")}
-                                error={!!errors.email}
-                                helperText={errors.email?.message}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Password"
-                                type="password"
-                                variant="outlined"
-                                {...register("password")}
-                                error={!!errors.password}
-                                helperText={errors.password?.message}
-                            />
-
-                            <TextField
-                                fullWidth
-                                label="Role"
-                                type="role"
-                                variant="outlined"
-                                focused
-                                {...register("role")}
-                                defaultValue="ASSISTANT"
-                                disabled
-                                error={!!errors.role}
-                                helperText={errors.role?.message}
-                            />
-
-
-                        </Box>
-                    </Box>
-
-                    <Divider />
-
-                    {/* Personal Information */}
                     <Box>
                         <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "#3b82f6", mb: 2, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                             Personal Information
@@ -213,7 +170,7 @@ export default function CreateAssistantForm({ onCancel }: CreateAssistantFormPro
                                 "&:hover": { bgcolor: "#2563eb" }
                             }}
                         >
-                            Save Assistant
+                            Update Assistant
                         </Button>
                     </Box>
                 </Stack>

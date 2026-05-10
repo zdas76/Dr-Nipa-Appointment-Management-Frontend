@@ -4,7 +4,7 @@ import type { RootState } from "../store";
 
 const baseQuery = fetchBaseQuery({
   // baseUrl: `https://api.fastcaredermalyn.com/api/v1`,
-  baseUrl: `http://localhost:5000`,
+  baseUrl: `http://localhost:5000/api/v1`,
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth?.token;

@@ -6,3 +6,14 @@ export type TUser = {
   iat: number;
   name: string;
 };
+
+export type TAssistant = {
+  id?: number;
+  email?: string;
+  name: string;
+  fatherName: string;
+  motherName: string;
+  dateOfBirth: string;
+  sex: "MALE" | "FEMALE" | "OTHER";
+  contactNumber: string;
+};
