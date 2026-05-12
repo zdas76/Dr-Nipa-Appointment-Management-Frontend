@@ -4,6 +4,7 @@ import PatientManagement from "../pages/dashboard/patient/Patient";
 import ConnectorManagement from "../pages/dashboard/connector/Connector";
 import Dashboard from "../pages/dashboard/Dashboard";
 import AppointmentManagement from "../pages/dashboard/Appoint/Appiontment";
+import ViewAssistantInfo from "../pages/dashboard/assistant/ViewAssistantInfo";
 
 
 export interface RouteConfig {
@@ -30,6 +31,14 @@ export const dashboardRoutes: RouteConfig[] = [
     icon: <AccessAlarmOutlined />,
     // roles: ["ADMIN"],
     element: <AssistantManagement />,
+  },
+  {
+    path: "add-assistant/:id",
+    title: "View Assistant",
+    icon: <AccessAlarmOutlined />,
+    // roles: ["ADMIN"],
+    element: <ViewAssistantInfo />,
+    hidden: true,
   },
   {
     path: "patient-management",

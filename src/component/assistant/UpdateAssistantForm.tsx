@@ -14,7 +14,7 @@ import {
 import { Controller, useForm } from "react-hook-form";
 import { useEffect } from "react";
 import { z } from "zod";
-import { useUpdateAssistantMutation } from "../../retux/api/authApi";
+import { useUpdateAssistantMutation } from "../../retux/api/assistantAPI";
 import { toast } from "sonner";
 import { getResponse } from "../../utils/getResponst";
 import type { TAssistant } from "../../types/User";

@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { useAssistantRegistrationMutation } from "../../retux/api/authApi";
+import { useAssistantRegistrationMutation } from "../../retux/api/assistantAPI";
 import { toast } from "sonner";
 import { getResponse } from "../../utils/getResponst";
 

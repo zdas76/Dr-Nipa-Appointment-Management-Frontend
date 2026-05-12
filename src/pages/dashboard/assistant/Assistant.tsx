@@ -3,11 +3,12 @@ import CreateAssistantForm from "../../../component/assistant/CreateAssistantFor
 import UpdateAssistantForm from "../../../component/assistant/UpdateAssistantForm";
 import BasicModal from "../../../component/Modal/BasicModel";
 import UpdateModal from "../../../component/Modal/UpdateModal";
-import { useDeleteAssistantMutation, useGetAllAssistantQuery } from "../../../retux/api/authApi";
-import { Delete, Edit } from "@mui/icons-material";
+import { useDeleteAssistantMutation, useGetAllAssistantQuery } from "../../../retux/api/assistantAPI";
+import { Delete, Edit, Visibility } from "@mui/icons-material";
 import { useState } from "react";
 import { getResponse } from "../../../utils/getResponst";
 import type { TAssistant } from "../../../types/User";
+import { Link } from "react-router";
 
 export default function AssistantManagement() {
 
@@ -17,6 +18,7 @@ export default function AssistantManagement() {
   const [deleteAssistant] = useDeleteAssistantMutation();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedAssistant, setSelectedAssistant] = useState<TAssistant | null>(null);
+
 
   const handleEdit = (assistant: TAssistant) => {
     setSelectedAssistant(assistant);
@@ -73,6 +75,12 @@ export default function AssistantManagement() {
                   <TableCell align="left">{row.contactNumber}</TableCell>
                   <TableCell align="left">
                     <Stack direction="row" sx={{ alignItems: "center", justifyContent: "center", gap: 2 }}>
+                      <Link to={`${row.id}`}>
+                        <Visibility
+                          color="primary"
+                          sx={{ cursor: "pointer" }}
+                        />
+                      </Link>
                       <Edit
                         color="primary"
                         sx={{ cursor: "pointer" }}
@@ -95,7 +103,6 @@ export default function AssistantManagement() {
       </Box>
 
       {/* Edit Modal */}
-      {/* Edit Modal */}
       <UpdateModal
         open={editModalOpen}
         handleClose={() => setEditModalOpen(false)}
@@ -107,6 +114,7 @@ export default function AssistantManagement() {
           />
         )}
       </UpdateModal>
+
     </Box>
   );
 }
