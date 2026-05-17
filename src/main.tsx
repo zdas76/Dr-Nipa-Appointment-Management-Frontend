@@ -5,7 +5,7 @@ import { Provider } from "react-redux";
 import { RouterProvider } from "react-router";
 import { Toaster } from "sonner";
 import { routes } from "./layout/router";
-import { store } from "./retux/store";
+import { store } from "./redux/store";
 import './index.css'
 
 createRoot(document.getElementById("root")!).render(

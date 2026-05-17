@@ -14,31 +14,30 @@ import {
     Person,
     Email,
     Phone,
-    Cake,
-    Wc,
-    AccountBox,
+    LocalHospital,
+    AttachMoney,
     Badge,
     CheckCircle,
     Cancel
 } from "@mui/icons-material";
 import { useParams, useNavigate } from "react-router";
-import { useGetAssistantByIdQuery } from "../../../redux/api/assistantAPI";
+import { useGetConnectorByIdQuery } from "../../../redux/api/connectorAPI";
 
-export default function ViewAssistantInfo() {
+export default function ViewConnectorInfo() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { data, isLoading } = useGetAssistantByIdQuery(Number(id));
-    const assistantData = data?.data;
+    const { data, isLoading } = useGetConnectorByIdQuery(Number(id));
+    const connectorData = data?.data;
 
     if (isLoading) {
         return (
             <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
-                <Typography variant="h6" color="text.secondary">Loading assistant details...</Typography>
+                <Typography variant="h6" color="text.secondary">Loading connector details...</Typography>
             </Box>
         );
     }
 
-    const isActive = assistantData?.users?.status === "ACTIVE";
+    const isActive = !connectorData?.isDeleted;
 
     return (
         <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 4 } }}>
@@ -48,7 +47,7 @@ export default function ViewAssistantInfo() {
                     <ArrowBack />
                 </IconButton>
                 <Typography variant="h4" sx={{ fontWeight: 800, color: "#1e293b" }}>
-                    Assistant Profile
+                    Connector Profile
                 </Typography>
             </Stack>
 
@@ -68,23 +67,23 @@ export default function ViewAssistantInfo() {
                         <Avatar sx={{
                             width: 120,
                             height: 120,
-                            bgcolor: "#3b82f6",
+                            bgcolor: "#8b5cf6",
                             mb: 3,
-                            boxShadow: "0 10px 25px rgba(59, 130, 246, 0.2)"
+                            boxShadow: "0 10px 25px rgba(139, 92, 246, 0.2)"
                         }}>
                             <Person sx={{ fontSize: 70 }} />
                         </Avatar>
 
                         <Typography variant="h5" sx={{ fontWeight: 800, color: "#1e293b", mb: 0.5 }}>
-                            {assistantData?.name}
+                            {connectorData?.name}
                         </Typography>
                         <Typography variant="body1" sx={{ color: "#64748b", mb: 2, fontWeight: 500 }}>
-                            @{assistantData?.users?.userName || "username"}
+                            {connectorData?.diagnosticName || "No Diagnostic"}
                         </Typography>
 
                         <Chip
                             icon={isActive ? <CheckCircle /> : <Cancel />}
-                            label={assistantData?.users?.status || "UNKNOWN"}
+                            label={isActive ? "ACTIVE" : "DELETED"}
                             color={isActive ? "success" : "error"}
                             variant="filled"
                             sx={{
@@ -99,15 +98,15 @@ export default function ViewAssistantInfo() {
 
                         <Stack spacing={2} sx={{ width: "100%" }}>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                <Email sx={{ color: "#3b82f6" }} />
+                                <Email sx={{ color: "#8b5cf6" }} />
                                 <Typography variant="body2" sx={{ color: "#475569", fontWeight: 500, textAlign: "left" }}>
-                                    {assistantData?.email}
+                                    {connectorData?.email || "N/A"}
                                 </Typography>
                             </Box>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                <Phone sx={{ color: "#3b82f6" }} />
+                                <Phone sx={{ color: "#8b5cf6" }} />
                                 <Typography variant="body2" sx={{ color: "#475569", fontWeight: 500, textAlign: "left" }}>
-                                    {assistantData?.contactNumber}
+                                    {connectorData?.contactNumber}
                                 </Typography>
                             </Box>
                         </Stack>
@@ -117,35 +116,34 @@ export default function ViewAssistantInfo() {
                 {/* Right Column: Detailed Info */}
                 <Grid xs={12} md={8}>
                     <Stack spacing={4}>
-                        {/* Personal Details Card */}
+                        {/* Business Details Card */}
                         <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
-                                <Badge sx={{ color: "#3b82f6" }} />
+                                <LocalHospital sx={{ color: "#8b5cf6" }} />
                                 <Typography variant="h6" sx={{ fontWeight: 800, color: "#1e293b" }}>
-                                    Personal Information
+                                    Business Information
                                 </Typography>
                             </Box>
                             <Grid container spacing={3}>
-                                <InfoItem icon={<AccountBox />} label="Father's Name" value={assistantData?.fatherName} />
-                                <InfoItem icon={<AccountBox />} label="Mother's Name" value={assistantData?.motherName} />
-                                <InfoItem icon={<Cake />} label="Date of Birth" value={assistantData?.dateOfBirth ? new Date(assistantData.dateOfBirth).toISOString().split('T')[0] : "N/A"} />
-                                <InfoItem icon={<Wc />} label="Gender" value={assistantData?.sex} />
+                                <InfoItem icon={<LocalHospital />} label="Diagnostic Name" value={connectorData?.diagnosticName} />
+                                <InfoItem icon={<Phone />} label="Contact Number" value={connectorData?.contactNumber} />
+                                <InfoItem icon={<Email />} label="Email Address" value={connectorData?.email} />
                             </Grid>
                         </Paper>
 
-                        {/* Account Details Card */}
+                        {/* Fee Details Card */}
                         <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
-                                <Badge sx={{ color: "#3b82f6" }} />
+                                <Badge sx={{ color: "#8b5cf6" }} />
                                 <Typography variant="h6" sx={{ fontWeight: 800, color: "#1e293b" }}>
-                                    Account & Role
+                                    Fee Structure
                                 </Typography>
                             </Box>
                             <Grid container spacing={3}>
-                                <InfoItem label="System Role" value={assistantData?.users?.role} />
-                                <InfoItem label="Account ID" value={assistantData?.users?.id?.toString()} />
-                                <InfoItem label="Registration Date" value={assistantData?.createdAt ? new Date(assistantData.createdAt).toLocaleDateString() : "N/A"} />
-                                <InfoItem label="Last Updated" value={assistantData?.updatedAt ? new Date(assistantData.updatedAt).toLocaleDateString() : "N/A"} />
+                                <InfoItem icon={<AttachMoney />} label="New Patient Fee" value={connectorData?.newPatientAmount?.toString()} />
+                                <InfoItem icon={<AttachMoney />} label="Old Patient Fee" value={connectorData?.oldPatientAmount?.toString()} />
+                                <InfoItem label="Connector ID" value={connectorData?.id?.toString()} />
+                                <InfoItem label="Status" value={isActive ? "Active" : "Deleted"} />
                             </Grid>
                         </Paper>
                     </Stack>

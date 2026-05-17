@@ -1,28 +1,36 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+    Autocomplete,
     Box,
     Button,
-    FormControl,
-    InputLabel,
     MenuItem,
     Paper,
-    Select,
     Stack,
     TextField,
     Typography
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
+import type { SubmitHandler } from "react-hook-form";
 import { z } from "zod";
+import { useGetAllPatientSearchQuery } from "../../redux/api/patientAPI";
+import { useGetAllConnectorQuery } from "../../redux/api/connectorAPI";
+import { useCreateAppointmentMutation, useGetLastAppointmentDateQuery } from "../../redux/api/appointment";
+import type { TConnector, TPatient } from "../../types/User";
+import { getResponse } from "../../utils/getResponst";
+import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 const schema = z.object({
     patientId: z.number({ message: "Patient ID is required" }).min(1),
     visitingDate: z.string().min(1, "Visiting date is required"),
+    patientType: z.enum(["NEW", "OLD"]),
     visitingTime: z.string().optional(),
     connectorId: z.number().optional().nullable(),
     visitingFee: z.number().optional().nullable(),
     weight: z.number().optional().nullable(),
     booldPusher: z.string().optional().nullable(),
     bloodGroup: z.string().optional().nullable(),
+    discount: z.number().optional().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -32,21 +40,88 @@ interface CreateAppointmentFormProps {
 }
 
 export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFormProps) {
+
+    const [searchPatient, setSearchPatient] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    const { data: patients, isLoading: isPatientsLoading } = useGetAllPatientSearchQuery(debouncedSearch, { skip: !debouncedSearch });
+    const { data: connectors, isLoading: isConnectorsLoading } = useGetAllConnectorQuery(undefined);
+    const [createAppointment, { isLoading }] = useCreateAppointmentMutation();
+
     const {
         register,
         handleSubmit,
         control,
+        setValue,
+        reset,
+        watch,
         formState: { errors },
     } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
-            bloodGroup: "A+",
+            patientType: "NEW",
         }
     });
 
-    const onSubmit = (data: FormData) => {
-        console.log("Appointment Data Submitted:", data);
-        // Handle submission logic (e.g., API call) here
+
+    const patientId = watch("patientId");
+    const vDate = watch("visitingDate");
+
+    const { data: lastAppointments } = useGetLastAppointmentDateQuery(patientId, { skip: !patientId });
+
+    useEffect(() => {
+        const lastApptDateStr = lastAppointments?.data?.result?.visitingDate;
+
+        if (lastApptDateStr && vDate) {
+            const lastDate = new Date(lastApptDateStr);
+            const visitingDate = new Date(vDate);
+
+            // Calculate total months difference
+            const yearDiff = visitingDate.getFullYear() - lastDate.getFullYear();
+            const monthDiff = visitingDate.getMonth() - lastDate.getMonth();
+
+            const totalMonths = yearDiff * 12 + monthDiff;
+
+            // Optional: check exact day difference
+            const isExceeded =
+                totalMonths > 3 ||
+                (totalMonths === 3 && visitingDate.getDate() >= lastDate.getDate());
+
+            if (isExceeded) {
+                setValue("patientType", "OLD");
+            } else {
+                setValue("patientType", "NEW");
+            }
+        } else {
+            setValue("patientType", "NEW");
+        }
+    }, [lastAppointments, vDate, setValue]);
+
+    useEffect(() => {
+        const timerId = setTimeout(() => {
+            setDebouncedSearch(searchPatient);
+        }, 1000);
+
+        return () => {
+            clearTimeout(timerId);
+        };
+    }, [searchPatient]);
+
+
+    const onSubmit: SubmitHandler<FormData> = async (data) => {
+        try {
+            const res = await createAppointment(data).unwrap();
+            const result = getResponse(res);
+            if (result.success) {
+                toast.success(result.message);
+                reset();
+                onCancel?.();
+            } else {
+                toast.error(result.message);
+            }
+        } catch {
+            toast.error("Failed to create appointment");
+        }
     };
 
     return (
@@ -61,15 +136,33 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
                         <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "#3b82f6", mb: 2, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                             Appointment Information
                         </Typography>
-                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Patient ID"
-                                type="number"
-                                variant="outlined"
-                                {...register("patientId", { valueAsNumber: true })}
-                                error={!!errors.patientId}
-                                helperText={errors.patientId?.message}
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr " }, gap: 3 }}>
+                            <Controller
+                                name="patientId"
+                                control={control}
+                                render={({ field: { onChange, value } }) => (
+                                    <Autocomplete
+                                        options={patients?.data || []}
+                                        getOptionLabel={(option: TPatient) => `${option.name} (${option.contactNumber})`}
+                                        loading={isPatientsLoading}
+                                        value={patients?.data?.find((p: TPatient) => p.id === value) || null}
+                                        onChange={(_, newValue) => {
+                                            onChange(newValue ? newValue.id : null);
+                                        }}
+
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Select Patient"
+                                                onChange={(e) => {
+                                                    setSearchPatient(e.target.value)
+                                                }}
+                                                error={!!errors.patientId}
+                                                helperText={errors.patientId?.message}
+                                            />
+                                        )}
+                                    />
+                                )}
                             />
                             <TextField
                                 fullWidth
@@ -81,6 +174,25 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
                                 error={!!errors.visitingDate}
                                 helperText={errors.visitingDate?.message}
                             />
+
+                            <Controller
+                                name="patientType"
+                                control={control}
+                                render={({ field }) => (
+                                    <TextField
+                                        {...field}
+                                        select
+                                        label="Patient Type"
+                                        error={!!errors.patientType}
+                                        helperText={errors.patientType?.message}
+                                        disabled
+                                    >
+                                        <MenuItem value={"NEW"}>NEW Patient</MenuItem>
+                                        <MenuItem value={"OLD"}>OLD Patient</MenuItem>
+                                    </TextField>
+                                )}
+                            />
+
                             <TextField
                                 fullWidth
                                 label="Visiting Time (Optional)"
@@ -91,55 +203,34 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
                                 error={!!errors.visitingTime}
                                 helperText={errors.visitingTime?.message}
                             />
-                            <TextField
-                                fullWidth
-                                label="Connector ID (Optional)"
-                                type="number"
-                                variant="outlined"
-                                {...register("connectorId", { valueAsNumber: true })}
-                                error={!!errors.connectorId}
-                                helperText={errors.connectorId?.message}
+
+                            <Controller
+                                name="connectorId"
+                                control={control}
+                                render={({ field: { onChange, value } }) => (
+                                    <Autocomplete
+                                        options={connectors?.data || []}
+                                        getOptionLabel={(option: TConnector) => `${option.name} (${option.diagnosticName || "No Diagnostic"})`}
+                                        loading={isConnectorsLoading}
+                                        value={connectors?.data?.find((c: TConnector) => c.id === value) || null}
+                                        onChange={(_, newValue) => {
+                                            onChange(newValue ? newValue.id : null);
+                                            if (newValue) {
+                                                // Automatically set visiting fee if it's a new patient (as a default)
+                                                setValue("visitingFee", newValue.newPatientAmount);
+                                            }
+                                        }}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Select Connector (Optional)"
+                                                error={!!errors.connectorId}
+                                                helperText={errors.connectorId?.message}
+                                            />
+                                        )}
+                                    />
+                                )}
                             />
-                            <TextField
-                                fullWidth
-                                label="Visiting Fee"
-                                type="number"
-                                variant="outlined"
-                                {...register("visitingFee", { valueAsNumber: true })}
-                                error={!!errors.visitingFee}
-                                helperText={errors.visitingFee?.message}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Weight (kg)"
-                                type="number"
-                                variant="outlined"
-                                {...register("weight", { valueAsNumber: true })}
-                                error={!!errors.weight}
-                                helperText={errors.weight?.message}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Blood Pressure (booldPusher)"
-                                variant="outlined"
-                                {...register("booldPusher")}
-                                error={!!errors.booldPusher}
-                                helperText={errors.booldPusher?.message}
-                            />
-                            <FormControl fullWidth error={!!errors.bloodGroup}>
-                                <InputLabel>Blood Group</InputLabel>
-                                <Controller
-                                    name="bloodGroup"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select {...field} label="Blood Group">
-                                            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((group) => (
-                                                <MenuItem key={group} value={group}>{group}</MenuItem>
-                                            ))}
-                                        </Select>
-                                    )}
-                                />
-                            </FormControl>
                         </Box>
                     </Box>
 
@@ -154,6 +245,7 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
                         <Button
                             variant="contained"
                             type="submit"
+                            disabled={isLoading}
                             sx={{
                                 borderRadius: 2,
                                 px: 4,
@@ -164,7 +256,7 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
                                 "&:hover": { bgcolor: "#2563eb" }
                             }}
                         >
-                            Save Appointment
+                            {isLoading ? "Saving..." : "Save Appointment"}
                         </Button>
                     </Box>
                 </Stack>

@@ -14,6 +14,9 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { z } from "zod";
+import { usePatientRegistrationMutation } from "../../redux/api/patientAPI";
+import { getResponse } from "../../utils/getResponst";
+import { toast } from "sonner";
 
 const schema = z.object({
     name: z.string().min(3, "Name must be at least 3 characters"),
@@ -30,10 +33,12 @@ interface CreatePatientFormProps {
 }
 
 export default function CreatePatientForm({ onCancel }: CreatePatientFormProps) {
+    const [submitPatient, { isLoading }] = usePatientRegistrationMutation();
     const {
         register,
         handleSubmit,
         control,
+        reset,
         formState: { errors },
     } = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -42,9 +47,16 @@ export default function CreatePatientForm({ onCancel }: CreatePatientFormProps) 
         }
     });
 
-    const onSubmit: SubmitHandler<FormData> = (data) => {
-        console.log("Patient Data Submitted:", data);
-        // Handle submission logic (e.g., API call) here
+    const onSubmit: SubmitHandler<FormData> = async (data) => {
+        const res = await submitPatient(data).unwrap();
+        const result = getResponse(res);
+        if (result.success) {
+            toast.success(result.message);
+            reset();
+            onCancel?.();
+        } else {
+            toast.error(result.message);
+        }
     };
 
     return (
@@ -124,6 +136,7 @@ export default function CreatePatientForm({ onCancel }: CreatePatientFormProps) 
                         <Button
                             variant="contained"
                             type="submit"
+                            disabled={isLoading}
                             sx={{
                                 borderRadius: 2,
                                 px: 4,
@@ -134,7 +147,7 @@ export default function CreatePatientForm({ onCancel }: CreatePatientFormProps) 
                                 "&:hover": { bgcolor: "#2563eb" }
                             }}
                         >
-                            Save Patient
+                            {isLoading ? "Saving..." : "Save Patient"}
                         </Button>
                     </Box>
                 </Stack>

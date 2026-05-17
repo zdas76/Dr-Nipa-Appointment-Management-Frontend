@@ -3,7 +3,7 @@ import CreateAssistantForm from "../../../component/assistant/CreateAssistantFor
 import UpdateAssistantForm from "../../../component/assistant/UpdateAssistantForm";
 import BasicModal from "../../../component/Modal/BasicModel";
 import UpdateModal from "../../../component/Modal/UpdateModal";
-import { useDeleteAssistantMutation, useGetAllAssistantQuery } from "../../../retux/api/assistantAPI";
+import { useDeleteAssistantMutation, useGetAllAssistantQuery } from "../../../redux/api/assistantAPI";
 import { Delete, Edit, Visibility } from "@mui/icons-material";
 import { useState } from "react";
 import { getResponse } from "../../../utils/getResponst";

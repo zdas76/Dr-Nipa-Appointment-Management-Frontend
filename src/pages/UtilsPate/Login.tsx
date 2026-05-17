@@ -20,9 +20,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { z } from "zod";
-import { useLoginMutation } from "../../retux/api/authApi";
-import { addUser } from "../../retux/features/authSlice";
-import { useAppDispatch } from "../../retux/hooks";
+import { useLoginMutation } from "../../redux/api/authApi";
+import { addUser } from "../../redux/features/authSlice";
+import { useAppDispatch } from "../../redux/hooks";
 import { decodeToken } from "../../utils/decodeToken";
 import { getResponse } from "../../utils/getResponst";
 
@@ -82,7 +82,11 @@ export default function Login() {
       <Paper elevation={12} variant="elevation" className="rounded-2xl">
         <Container
           component="main"
-          className="border-4 md:border-8 bg-slate-100 border-orange-600 w-[350px] md:w-[500px] pt-4"
+          className="border-4 md:border-8 bg-slate-100 border-sky-50 w-[350px] md:w-[500px] pt-4"
+          sx={{
+            borderBottomLeftRadius: "3rem",
+            borderBottomRightRadius: "3rem",
+          }}
         >
           <Typography
             className="flex flex-col justify-center items-center mt-4 p-4"

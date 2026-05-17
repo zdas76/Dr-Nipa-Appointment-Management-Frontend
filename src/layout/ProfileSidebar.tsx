@@ -1,7 +1,7 @@
 import { Avatar, Box, Typography } from "@mui/material";
 import { Link } from "react-router";
-import { useAppDispatch } from "../retux/hooks";
-import { logOut } from "../retux/features/authSlice";
+import { useAppDispatch } from "../redux/hooks";
+import { logOut } from "../redux/features/authSlice";
 import { ArrowBack, LockOutlined, AccountCircle } from "@mui/icons-material";
 
 

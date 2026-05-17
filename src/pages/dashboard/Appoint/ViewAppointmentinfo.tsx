@@ -12,33 +12,31 @@ import {
 import {
     ArrowBack,
     Person,
-    Email,
     Phone,
-    Cake,
-    Wc,
-    AccountBox,
-    Badge,
-    CheckCircle,
-    Cancel
+    CalendarToday,
+    AccessTime,
+    AttachMoney,
+    MedicalServices,
+    LocalHospital
 } from "@mui/icons-material";
 import { useParams, useNavigate } from "react-router";
-import { useGetAssistantByIdQuery } from "../../../redux/api/assistantAPI";
+import { useGetAppointmentByIdQuery } from "../../../redux/api/appointment";
 
-export default function ViewAssistantInfo() {
+export default function ViewAppointmentinfo() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { data, isLoading } = useGetAssistantByIdQuery(Number(id));
-    const assistantData = data?.data;
+    const { data, isLoading } = useGetAppointmentByIdQuery(Number(id));
+    const appointmentData = data?.data;
 
     if (isLoading) {
         return (
             <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
-                <Typography variant="h6" color="text.secondary">Loading assistant details...</Typography>
+                <Typography variant="h6" color="text.secondary">Loading appointment details...</Typography>
             </Box>
         );
     }
 
-    const isActive = assistantData?.users?.status === "ACTIVE";
+    const isNew = appointmentData?.patientType === "NEW";
 
     return (
         <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 4 } }}>
@@ -48,13 +46,13 @@ export default function ViewAssistantInfo() {
                     <ArrowBack />
                 </IconButton>
                 <Typography variant="h4" sx={{ fontWeight: 800, color: "#1e293b" }}>
-                    Assistant Profile
+                    Appointment Details
                 </Typography>
             </Stack>
 
             <Grid container spacing={4}>
-                {/* Left Column: Profile Summary */}
-                <Grid xs={12} md={4}>
+                {/* Left Column: Patient Summary */}
+                <Grid size={{ xs: 12, md: 4 }}>
                     <Paper elevation={0} sx={{
                         p: 4,
                         borderRadius: 4,
@@ -76,16 +74,15 @@ export default function ViewAssistantInfo() {
                         </Avatar>
 
                         <Typography variant="h5" sx={{ fontWeight: 800, color: "#1e293b", mb: 0.5 }}>
-                            {assistantData?.name}
+                            {appointmentData?.patientInfo?.name || appointmentData?.patient?.name || "Unknown Patient"}
                         </Typography>
                         <Typography variant="body1" sx={{ color: "#64748b", mb: 2, fontWeight: 500 }}>
-                            @{assistantData?.users?.userName || "username"}
+                            Patient
                         </Typography>
 
                         <Chip
-                            icon={isActive ? <CheckCircle /> : <Cancel />}
-                            label={assistantData?.users?.status || "UNKNOWN"}
-                            color={isActive ? "success" : "error"}
+                            label={appointmentData?.patientType || "UNKNOWN"}
+                            color={isNew ? "success" : "primary"}
                             variant="filled"
                             sx={{
                                 fontWeight: 700,
@@ -99,15 +96,9 @@ export default function ViewAssistantInfo() {
 
                         <Stack spacing={2} sx={{ width: "100%" }}>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                <Email sx={{ color: "#3b82f6" }} />
-                                <Typography variant="body2" sx={{ color: "#475569", fontWeight: 500, textAlign: "left" }}>
-                                    {assistantData?.email}
-                                </Typography>
-                            </Box>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                                 <Phone sx={{ color: "#3b82f6" }} />
                                 <Typography variant="body2" sx={{ color: "#475569", fontWeight: 500, textAlign: "left" }}>
-                                    {assistantData?.contactNumber}
+                                    {appointmentData?.patientInfo?.contactNumber || appointmentData?.patient?.contactNumber || "N/A"}
                                 </Typography>
                             </Box>
                         </Stack>
@@ -115,39 +106,55 @@ export default function ViewAssistantInfo() {
                 </Grid>
 
                 {/* Right Column: Detailed Info */}
-                <Grid xs={12} md={8}>
+                <Grid size={{ xs: 12, md: 8 }}>
                     <Stack spacing={4}>
-                        {/* Personal Details Card */}
+                        {/* Appointment Details Card */}
                         <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
-                                <Badge sx={{ color: "#3b82f6" }} />
+                                <CalendarToday sx={{ color: "#3b82f6" }} />
                                 <Typography variant="h6" sx={{ fontWeight: 800, color: "#1e293b" }}>
-                                    Personal Information
+                                    Schedule Information
                                 </Typography>
                             </Box>
                             <Grid container spacing={3}>
-                                <InfoItem icon={<AccountBox />} label="Father's Name" value={assistantData?.fatherName} />
-                                <InfoItem icon={<AccountBox />} label="Mother's Name" value={assistantData?.motherName} />
-                                <InfoItem icon={<Cake />} label="Date of Birth" value={assistantData?.dateOfBirth ? new Date(assistantData.dateOfBirth).toISOString().split('T')[0] : "N/A"} />
-                                <InfoItem icon={<Wc />} label="Gender" value={assistantData?.sex} />
+                                <InfoItem icon={<CalendarToday />} label="Visiting Date" value={appointmentData?.visitingDate} />
+                                <InfoItem icon={<AccessTime />} label="Visiting Time" value={appointmentData?.visitingTime} />
+                                <InfoItem icon={<AttachMoney />} label="Visiting Fee" value={appointmentData?.visitingFee ? `${appointmentData.visitingFee} BDT` : "N/A"} />
+                                <InfoItem icon={<AttachMoney />} label="Discount" value={appointmentData?.discount ? `${appointmentData.discount} BDT` : "0 BDT"} />
                             </Grid>
                         </Paper>
 
-                        {/* Account Details Card */}
+                        {/* Additional Health Info */}
                         <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
-                                <Badge sx={{ color: "#3b82f6" }} />
+                                <MedicalServices sx={{ color: "#3b82f6" }} />
                                 <Typography variant="h6" sx={{ fontWeight: 800, color: "#1e293b" }}>
-                                    Account & Role
+                                    Health Indicators
                                 </Typography>
                             </Box>
                             <Grid container spacing={3}>
-                                <InfoItem label="System Role" value={assistantData?.users?.role} />
-                                <InfoItem label="Account ID" value={assistantData?.users?.id?.toString()} />
-                                <InfoItem label="Registration Date" value={assistantData?.createdAt ? new Date(assistantData.createdAt).toLocaleDateString() : "N/A"} />
-                                <InfoItem label="Last Updated" value={assistantData?.updatedAt ? new Date(assistantData.updatedAt).toLocaleDateString() : "N/A"} />
+                                <InfoItem label="Blood Group" value={appointmentData?.bloodGroup} />
+                                <InfoItem label="Blood Pressure" value={appointmentData?.booldPusher} />
+                                <InfoItem label="Weight (kg)" value={appointmentData?.weight?.toString()} />
                             </Grid>
                         </Paper>
+
+                        {/* Connector Info */}
+                        {appointmentData?.connectorId && (
+                            <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                    <LocalHospital sx={{ color: "#3b82f6" }} />
+                                    <Typography variant="h6" sx={{ fontWeight: 800, color: "#1e293b" }}>
+                                        Connector / Diagnostic
+                                    </Typography>
+                                </Box>
+                                <Grid container spacing={3}>
+                                    <InfoItem label="Connector Name" value={appointmentData?.connectorInfo?.name || appointmentData?.connector?.name} />
+                                    <InfoItem label="Diagnostic Name" value={appointmentData?.connectorInfo?.diagnosticName || appointmentData?.connector?.diagnosticName} />
+                                    <InfoItem label="Contact Number" value={appointmentData?.connectorInfo?.contactNumber || appointmentData?.connector?.contactNumber} />
+                                </Grid>
+                            </Paper>
+                        )}
                     </Stack>
                 </Grid>
             </Grid>
@@ -163,7 +170,7 @@ interface InfoItemProps {
 
 function InfoItem({ label, value, icon }: InfoItemProps) {
     return (
-        <Grid xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
             <Typography variant="caption" sx={{
                 color: "#64748b",
                 fontWeight: 700,

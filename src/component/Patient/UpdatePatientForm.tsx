@@ -2,53 +2,61 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
     Box,
     Button,
+    FormControl,
+    InputLabel,
+    MenuItem,
     Paper,
+    Select,
     Stack,
     TextField,
     Typography
 } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import type { SubmitHandler } from "react-hook-form";
 import { z } from "zod";
-import { useConnectorRegistrationMutation } from "../../redux/api/connectorAPI";
+import { useUpdatePatientMutation } from "../../redux/api/patientAPI";
 import { getResponse } from "../../utils/getResponst";
 import { toast } from "sonner";
+import type { TPatient } from "../../types/User";
 
 const schema = z.object({
     name: z.string().min(3, "Name must be at least 3 characters"),
+    age: z.number({ message: "Age must be a number" }).min(1, "Age must be a positive number"),
+    sex: z.enum(["MALE", "FEMALE", "OTHER"]),
     contactNumber: z.string().min(11, "Invalid contact number"),
-    email: z.string().email("Invalid email address").optional().or(z.literal("")),
-    diagnosticName: z.string().optional(),
-    newPatientAmount: z.number({ message: "Must be a number" }).min(0, "Amount must be positive"),
-    oldPatientAmount: z.number({ message: "Must be a number" }).min(0, "Amount must be positive"),
+    address: z.string().min(1, "Address is required"),
 });
 
 type FormData = z.infer<typeof schema>;
 
-interface CreateConnectorFormProps {
+interface UpdatePatientFormProps {
+    data: TPatient;
     onCancel?: () => void;
 }
 
-export default function CreateConnectorForm({ onCancel }: CreateConnectorFormProps) {
-    const [submitConnector, { isLoading }] = useConnectorRegistrationMutation();
+export default function UpdatePatientForm({ data, onCancel }: UpdatePatientFormProps) {
+    const [updatePatient, { isLoading }] = useUpdatePatientMutation();
     const {
         register,
         handleSubmit,
-        reset,
+        control,
         formState: { errors },
     } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
-            newPatientAmount: 0,
-            oldPatientAmount: 0,
+            name: data.name,
+            age: data.age,
+            sex: data.sex,
+            contactNumber: data.contactNumber,
+            address: data.address,
         }
     });
 
-    const onSubmit = async (data: FormData) => {
-        const res = await submitConnector(data).unwrap();
+    const onSubmit: SubmitHandler<FormData> = async (formData) => {
+        const res = await updatePatient({ id: data.id, ...formData }).unwrap();
         const result = getResponse(res);
         if (result.success) {
             toast.success(result.message);
-            reset();
             onCancel?.();
         } else {
             toast.error(result.message);
@@ -58,16 +66,16 @@ export default function CreateConnectorForm({ onCancel }: CreateConnectorFormPro
     return (
         <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
             <Typography variant="h5" sx={{ fontWeight: 800, mb: 3, color: "#1e293b" }}>
-                Add New Connector
+                Update Patient Information
             </Typography>
 
             <form onSubmit={handleSubmit(onSubmit)}>
                 <Stack spacing={4}>
                     <Box>
                         <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "#3b82f6", mb: 2, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                            Connector Details
+                            Patient Information
                         </Typography>
-                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+                        <Box className="grid gap-4 grid-cols-1 lg:grid-cols-1">
                             <TextField
                                 fullWidth
                                 label="Full Name"
@@ -78,6 +86,29 @@ export default function CreateConnectorForm({ onCancel }: CreateConnectorFormPro
                             />
                             <TextField
                                 fullWidth
+                                label="Age"
+                                type="number"
+                                variant="outlined"
+                                {...register("age", { valueAsNumber: true })}
+                                error={!!errors.age}
+                                helperText={errors.age?.message}
+                            />
+                            <FormControl fullWidth error={!!errors.sex}>
+                                <InputLabel>Sex</InputLabel>
+                                <Controller
+                                    name="sex"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select {...field} label="Sex">
+                                            <MenuItem value="MALE">Male</MenuItem>
+                                            <MenuItem value="FEMALE">Female</MenuItem>
+                                            <MenuItem value="OTHER">Other</MenuItem>
+                                        </Select>
+                                    )}
+                                />
+                            </FormControl>
+                            <TextField
+                                fullWidth
                                 label="Contact Number"
                                 variant="outlined"
                                 {...register("contactNumber")}
@@ -86,38 +117,14 @@ export default function CreateConnectorForm({ onCancel }: CreateConnectorFormPro
                             />
                             <TextField
                                 fullWidth
-                                label="Email Address (Optional)"
-                                type="email"
+                                label="Address"
                                 variant="outlined"
-                                {...register("email")}
-                                error={!!errors.email}
-                                helperText={errors.email?.message}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Diagnostic Name (Optional)"
-                                variant="outlined"
-                                {...register("diagnosticName")}
-                                error={!!errors.diagnosticName}
-                                helperText={errors.diagnosticName?.message}
-                            />
-                            <TextField
-                                fullWidth
-                                label="New Patient Amount"
-                                type="number"
-                                variant="outlined"
-                                {...register("newPatientAmount", { valueAsNumber: true })}
-                                error={!!errors.newPatientAmount}
-                                helperText={errors.newPatientAmount?.message}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Old Patient Amount"
-                                type="number"
-                                variant="outlined"
-                                {...register("oldPatientAmount", { valueAsNumber: true })}
-                                error={!!errors.oldPatientAmount}
-                                helperText={errors.oldPatientAmount?.message}
+                                multiline
+                                rows={2}
+                                sx={{ gridColumn: { md: "span 2" } }}
+                                {...register("address")}
+                                error={!!errors.address}
+                                helperText={errors.address?.message}
                             />
                         </Box>
                     </Box>
@@ -144,7 +151,7 @@ export default function CreateConnectorForm({ onCancel }: CreateConnectorFormPro
                                 "&:hover": { bgcolor: "#2563eb" }
                             }}
                         >
-                            {isLoading ? "Saving..." : "Save Connector"}
+                            {isLoading ? "Updating..." : "Update Patient"}
                         </Button>
                     </Box>
                 </Stack>

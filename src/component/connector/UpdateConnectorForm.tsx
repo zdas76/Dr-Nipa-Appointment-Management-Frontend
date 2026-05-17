@@ -9,9 +9,10 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useConnectorRegistrationMutation } from "../../redux/api/connectorAPI";
+import { useUpdateConnectorMutation } from "../../redux/api/connectorAPI";
 import { getResponse } from "../../utils/getResponst";
 import { toast } from "sonner";
+import type { TConnector } from "../../types/User";
 
 const schema = z.object({
     name: z.string().min(3, "Name must be at least 3 characters"),
@@ -24,31 +25,34 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-interface CreateConnectorFormProps {
+interface UpdateConnectorFormProps {
+    data: TConnector;
     onCancel?: () => void;
 }
 
-export default function CreateConnectorForm({ onCancel }: CreateConnectorFormProps) {
-    const [submitConnector, { isLoading }] = useConnectorRegistrationMutation();
+export default function UpdateConnectorForm({ data, onCancel }: UpdateConnectorFormProps) {
+    const [updateConnector, { isLoading }] = useUpdateConnectorMutation();
     const {
         register,
         handleSubmit,
-        reset,
         formState: { errors },
     } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
-            newPatientAmount: 0,
-            oldPatientAmount: 0,
+            name: data.name,
+            contactNumber: data.contactNumber,
+            email: data.email || "",
+            diagnosticName: data.diagnosticName || "",
+            newPatientAmount: data.newPatientAmount,
+            oldPatientAmount: data.oldPatientAmount,
         }
     });
 
-    const onSubmit = async (data: FormData) => {
-        const res = await submitConnector(data).unwrap();
+    const onSubmit = async (formData: FormData) => {
+        const res = await updateConnector({ id: data.id, ...formData }).unwrap();
         const result = getResponse(res);
         if (result.success) {
             toast.success(result.message);
-            reset();
             onCancel?.();
         } else {
             toast.error(result.message);
@@ -58,7 +62,7 @@ export default function CreateConnectorForm({ onCancel }: CreateConnectorFormPro
     return (
         <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
             <Typography variant="h5" sx={{ fontWeight: 800, mb: 3, color: "#1e293b" }}>
-                Add New Connector
+                Update Connector
             </Typography>
 
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -144,7 +148,7 @@ export default function CreateConnectorForm({ onCancel }: CreateConnectorFormPro
                                 "&:hover": { bgcolor: "#2563eb" }
                             }}
                         >
-                            {isLoading ? "Saving..." : "Save Connector"}
+                            {isLoading ? "Updating..." : "Update Connector"}
                         </Button>
                     </Box>
                 </Stack>

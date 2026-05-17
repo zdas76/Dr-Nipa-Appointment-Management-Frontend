@@ -2,8 +2,8 @@ import { Home, KeyboardArrowDown } from "@mui/icons-material";
 import { Box, Collapse, Typography } from "@mui/material";
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
-import { selectCurrentToken } from "../retux/features/authSlice";
-import { useAppSelector } from "../retux/hooks";
+import { selectCurrentToken } from "../redux/features/authSlice";
+import { useAppSelector } from "../redux/hooks";
 import { decodeToken } from "../utils/decodeToken";
 import { dashboardRoutes, type RouteConfig } from "./routerConfig";
 

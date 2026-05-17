@@ -3,8 +3,8 @@ import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import * as React from "react";
-import { logOut } from "../retux/features/authSlice";
-import { useAppDispatch } from "../retux/hooks";
+import { logOut } from "../redux/features/authSlice";
+import { useAppDispatch } from "../redux/hooks";
 import { Link } from "react-router";
 
 export default function UserMenu() {

@@ -42,6 +42,9 @@ export const baseApi = createApi({
     "mpoTarget",
     "workingDay",
     "depo_transection",
+    "patient",
+    "connector",
+    "appointment",
   ],
   endpoints: () => ({}),
 });
