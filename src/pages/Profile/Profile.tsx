@@ -8,6 +8,8 @@ import {
     Divider,
     Button,
     Stack,
+    Switch,
+    TextField,
 } from "@mui/material";
 import {
     Call,
@@ -16,16 +18,33 @@ import {
     School,
     Work,
     Verified,
+    LocalDining,
 } from "@mui/icons-material";
 import doctorPortrait from "../../assets/doctor_portrait.png";
+import BasicModal from "../../component/Modal/BasicModel";
+import EditProfile from "./EditProfile";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../redux/store";
+import { useAddSafeMutation, useGetDoctorQuery } from "../../redux/api/doctorAPI";
+
 
 export default function Profile() {
+
+    const { user } = useSelector((state: RootState) => state.auth);
+
+    const [addSafe, { isLoading: addSafeLoading }] = useAddSafeMutation();
+
+    const { data: DoctorData, isLoading } = useGetDoctorQuery(user?.email, {
+        skip: !user?.email,
+        refetchOnMountOrArgChange: true,
+    });
+
     const doctorData = {
-        name: "ডা: নাহিদা ইসলাম নীপা",
-        englishName: "Dr. Nahida Islam Nipa",
-        title: "Associate Professor & Head of Department",
-        specialization: "চর্ম ও যৌন রোগ বিশেষজ্ঞ ও ডার্মাটো সার্জন",
-        englishSpecialization: "Skin & VD Specialist & Dermato Surgeon",
+        name: DoctorData?.data?.nameBangla || "",
+        englishName: DoctorData?.data?.nameEnglish || "",
+        title: DoctorData?.data?.designation || "",
+        specialization: DoctorData?.data?.designation || "",
+        englishSpecialization: DoctorData?.data?.designation || "",
         qualifications: [
             "MBBS (DU)",
             "DDV (DU)",
@@ -51,6 +70,21 @@ export default function Profile() {
         { title: "Aesthetic Medicine", description: "Non-surgical cosmetic treatments to enhance skin appearance.", icon: <Verified /> },
         { title: "Skin & VD Consultation", description: "Comprehensive diagnosis and treatment for all skin and venereal diseases.", icon: <Verified /> },
     ];
+
+    if (isLoading) {
+        return <LocalDining />
+    }
+
+    const handelCheck = (checked: boolean) => {
+        console.log("checked", checked)
+        addSafe({ id: DoctorData?.data?.isSafes[0]?.id, payload: { isSafe: checked, doctorId: DoctorData?.data?.id } })
+
+    }
+
+    const handelLimit = (limit: number) => {
+        console.log("limit", limit)
+        addSafe({ id: DoctorData?.data?.isSafes[0]?.id, payload: { limit, doctorId: DoctorData?.data?.id } })
+    }
 
     return (
         <Box sx={{
@@ -126,7 +160,7 @@ export default function Profile() {
                                     {doctorData.institution}
                                 </Typography>
                             </Box>
-                            <Box sx={{ mt: 2 }}>
+                            <Box sx={{ mt: 2, display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
                                 <Chip
                                     label={doctorData.specialization}
                                     sx={{
@@ -140,6 +174,9 @@ export default function Profile() {
                                         borderRadius: "16px"
                                     }}
                                 />
+                                <BasicModal buttonLabel="Edit Profile">
+                                    <EditProfile email={user.email} />
+                                </BasicModal>
                             </Box>
                         </Stack>
                     </Box>
@@ -216,6 +253,43 @@ export default function Profile() {
                                     </CardContent>
                                 </Card>
                             ))}
+                        </Box>
+
+                        <Box>
+                            <Typography variant="h4" sx={{ fontWeight: 800, color: "#0f172a", mt: 4, mb: 2, px: 2 }}>Safe Appointment</Typography>
+                            <Box>
+                                <Box sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "left",
+                                    justifyContent: "space-between",
+                                    px: 2,
+                                    py: 2,
+                                    bgcolor: "white",
+                                    borderRadius: 3,
+                                    border: "1px solid #f1f5f9",
+                                    boxShadow: "0 10px 25px rgba(0,0,0,0.04)",
+                                }}>
+                                    <Box sx={{ display: "flex", alignItems: "left", gap: 2, justifyContent: "space-between" }}>
+                                        <Typography variant="h6" sx={{ fontWeight: 800, color: "#0f172a", mb: 2, px: 2 }}>Is Safe</Typography>
+                                        <Switch defaultChecked={DoctorData?.data?.isSafes[0].isSafe} onChange={(e) => handelCheck(e.target.checked)} disabled={addSafeLoading} />
+                                    </Box>
+
+                                    <Box sx={{ display: "flex", alignItems: "left", gap: 2, justifyContent: "space-between" }}>
+                                        <Typography variant="h6" sx={{ fontWeight: 800, color: "#0f172a", mb: 2, px: 2 }}>Data Limit</Typography>
+                                        <TextField
+                                            disabled={addSafeLoading}
+                                            defaultValue={DoctorData?.data?.isSafes[0].limit}
+                                            onBlur={(e) => handelLimit(Number(e.target.value))}
+                                            type="number"
+                                            size="small"
+                                            sx={{ width: "80px" }}
+                                        />
+                                    </Box>
+
+                                </Box>
+
+                            </Box>
                         </Box>
                     </Stack>
                 </Box>

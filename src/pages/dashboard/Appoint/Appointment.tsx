@@ -1,19 +1,24 @@
-import { Box, Divider, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Divider, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import CreateAppointmentForm from "../../../component/Appointment/CreateAppointmentForm";
 import UpdateAppointmentForm from "../../../component/Appointment/UpdateAppointmentForm";
 import BasicModal from "../../../component/Modal/BasicModel";
 import UpdateModal from "../../../component/Modal/UpdateModal";
-import { useDeleteAppointmentMutation, useGetAllAppointmentQuery } from "../../../redux/api/appointment";
+import { useDeleteAppointmentMutation, useGetAllAppointmentByDateQuery } from "../../../redux/api/appointment";
 import { Delete, Edit, Visibility } from "@mui/icons-material";
 import { useState } from "react";
 import { getResponse } from "../../../utils/getResponst";
 import type { TAppointment } from "../../../types/User";
 import { Link } from "react-router";
+import Swal from 'sweetalert2'
 
 export default function AppointmentManagement() {
-    const { data: appointments } = useGetAllAppointmentQuery(undefined, {
+
+    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+
+    const { data: appointments } = useGetAllAppointmentByDateQuery(date, {
         refetchOnMountOrArgChange: true,
     });
+
     const [deleteAppointment] = useDeleteAppointmentMutation();
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null);
@@ -24,10 +29,24 @@ export default function AppointmentManagement() {
     };
 
     const handleDelete = async (id: number) => {
-        if (window.confirm("Are you sure you want to delete this appointment?")) {
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+        }).then(async (result) => {
             const res = await deleteAppointment(id);
             getResponse(res);
-        }
+            if (result.isConfirmed) Swal.fire({
+                title: "Deleted!",
+                text: "Your file has been deleted.",
+                icon: "success"
+            });
+        });
     };
 
     return (
@@ -41,6 +60,12 @@ export default function AppointmentManagement() {
             </Box>
 
             <Divider />
+
+            <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "flex-end", my: 2, gap: 2 }}>
+                <Typography sx={{ fontSize: 16, fontWeight: 500 }}>Select Date : </Typography>
+                <TextField type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </Box>
+
             <Box sx={{ mt: 3 }}>
                 <TableContainer component={Paper}>
                     <Table sx={{ minWidth: 650 }} aria-label="simple table">
@@ -49,6 +74,7 @@ export default function AppointmentManagement() {
                                 <TableCell>SL</TableCell>
                                 <TableCell align="left">Patient Name</TableCell>
                                 <TableCell align="left">Contact Number</TableCell>
+                                <TableCell align="left">Gender</TableCell>
                                 <TableCell align="left">Visiting Date</TableCell>
                                 <TableCell align="left">Visiting Time</TableCell>
                                 <TableCell align="left">Type</TableCell>
@@ -67,6 +93,7 @@ export default function AppointmentManagement() {
                                         {row.patientInfo?.name}
                                     </TableCell>
                                     <TableCell align="left">{row.patientInfo?.contactNumber}</TableCell>
+                                    <TableCell align="left">{row.patientInfo?.sex}</TableCell>
                                     <TableCell align="left">{row.visitingDate}</TableCell>
                                     <TableCell align="left">{row.visitingTime || "N/A"}</TableCell>
                                     <TableCell align="left">{row.patientType}</TableCell>

@@ -53,6 +53,7 @@ export type TAppointment = {
   patientId: number;
   visitingDate: string;
   patientType: "NEW" | "OLD";
+  status?: "BOOKED" | "PRESENT" | "ABSENT";
   visitingTime?: string;
   connectorId?: number | null;
   visitingFee?: number | null;
@@ -65,6 +66,7 @@ export type TAppointment = {
   patientInfo?: {
     name: string;
     contactNumber: string;
+    sex: "MALE" | "FEMALE" | "OTHER";
   };
   connectorInfo?: {
     name: string;

@@ -3,16 +3,6 @@ import { baseApi } from "./baseApi";
 
 const assistantApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
-        AssistantRegistration: builder.mutation({
-            query: (info) => {
-                return {
-                    url: "/assistant",
-                    method: "POST",
-                    body: info,
-                };
-            },
-            invalidatesTags: ["user"],
-        }),
         getAllAssistant: builder.query({
             query: () => {
                 return {
@@ -54,7 +44,6 @@ const assistantApi = baseApi.injectEndpoints({
 });
 
 export const {
-    useAssistantRegistrationMutation,
     useGetAllAssistantQuery,
     useUpdateAssistantMutation,
     useDeleteAssistantMutation,

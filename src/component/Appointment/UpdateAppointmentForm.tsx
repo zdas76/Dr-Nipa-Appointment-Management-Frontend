@@ -18,6 +18,8 @@ import { useUpdateAppointmentMutation, useGetLastAppointmentDateQuery, useGetApp
 import { getResponse } from "../../utils/getResponst";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { useGetDoctorInforQuery } from "../../redux/api/doctorAPI";
+import { FrontLoader } from "@mui/icons-material";
 
 const schema = z.object({
     patientId: z.number({ message: "Patient ID is required" }).min(1),
@@ -41,6 +43,9 @@ interface UpdateAppointmentFormProps {
 export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmentFormProps) {
     const { data: appData, isLoading: appIsLoading } = useGetAppointmentByIdQuery(id);
     const data = appData?.data;
+
+    const { data: doctors, isLoading: isDoctorLoading } = useGetDoctorInforQuery([]);
+    const doctorinfo = doctors?.data[0];
 
     const [updateAppointment, { isLoading }] = useUpdateAppointmentMutation();
 
@@ -100,9 +105,9 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
     const { data: lastAppointments } = useGetLastAppointmentDateQuery(patientId, { skip: !patientId });
 
     useEffect(() => {
-        const lastApptDateStr = lastAppointments?.data?.result;
+        const lastApptDateStr = lastAppointments?.data?.result?.visitingDate;
 
-        if (lastApptDateStr && vDate) {
+        if (lastApptDateStr && vDate && doctorinfo) {
             const lastDate = new Date(lastApptDateStr);
             const visitingDate = new Date(vDate);
 
@@ -117,14 +122,17 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
 
             if (isExceeded) {
                 setValue("patientType", "NEW");
+                setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
+
             } else {
                 setValue("patientType", "OLD");
+                setValue("visitingFee", doctorinfo?.oldPatientVisitingFee);
             }
         } else if (lastApptDateStr === null) {
             setValue("patientType", "NEW");
+            setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
         }
-    }, [lastAppointments, vDate, setValue]);
-
+    }, [lastAppointments, vDate, doctorinfo, setValue]);
 
     const onSubmit: SubmitHandler<FormData> = async (formData) => {
         if (!data) return;
@@ -143,6 +151,9 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
         }
     };
 
+    if (isDoctorLoading) {
+        return <FrontLoader />
+    }
     return (
         <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
             <Typography variant="h5" sx={{ fontWeight: 800, mb: 3, color: "#1e293b" }}>
@@ -230,6 +241,7 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
                                     label="Visiting Fee"
                                     type="number"
                                     variant="outlined"
+                                    disabled
                                     {...register("visitingFee", { valueAsNumber: true })}
                                     error={!!errors.visitingFee}
                                     helperText={errors.visitingFee?.message}

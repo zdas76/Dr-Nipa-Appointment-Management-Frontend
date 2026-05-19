@@ -13,16 +13,17 @@ const appointmentApi = baseApi.injectEndpoints({
             },
             invalidatesTags: ["appointment"],
         }),
-        getAllAppointment: builder.query({
-            query: () => {
+        getAllAppointmentByDate: builder.query({
+            query: (date?: string) => {
                 return {
-                    url: "/appointment",
+                    url: `/appointment?date=${date}`,
                     method: "GET",
                 };
             },
             providesTags: ["appointment"],
         }),
-        getAppointmentById: builder.query<TAppointment, number>({
+
+        getAppointmentById: builder.query({
             query: (id) => {
                 return {
                     url: `/appointment/${id}`,
@@ -32,7 +33,7 @@ const appointmentApi = baseApi.injectEndpoints({
             providesTags: ["appointment"],
         }),
 
-        getLastAppointmentDate: builder.query<{ data: { result: string | null } }, number>({
+        getLastAppointmentDate: builder.query<{ data: { result: { visitingDate: string } | null } }, number>({
             query: (patientId: number) => {
                 return {
                     url: `/appointment/last-date?patientId=${patientId}`,
@@ -52,6 +53,14 @@ const appointmentApi = baseApi.injectEndpoints({
             },
             invalidatesTags: ["appointment"],
         }),
+        updateAppointmentStatus: builder.mutation<void, { id: number; status: "BOOKED" | "PRESENT" | "ABSENT" }>({
+            query: ({ id, status }) => ({
+                url: `/appointment/${id}/status`,
+                method: "PATCH",
+                body: { status },
+            }),
+            invalidatesTags: ["appointment"],
+        }),
         deleteAppointment: builder.mutation({
             query: (id) => {
                 return {
@@ -66,9 +75,10 @@ const appointmentApi = baseApi.injectEndpoints({
 
 export const {
     useCreateAppointmentMutation,
-    useGetAllAppointmentQuery,
+    useGetAllAppointmentByDateQuery,
     useGetAppointmentByIdQuery,
     useGetLastAppointmentDateQuery,
     useUpdateAppointmentMutation,
+    useUpdateAppointmentStatusMutation,
     useDeleteAppointmentMutation,
 } = appointmentApi;

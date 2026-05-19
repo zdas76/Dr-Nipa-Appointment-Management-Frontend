@@ -56,7 +56,11 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/profile",
-    element: <ProfileLayout />,
+    element: (
+      <ProtectedRoute roles={["ADMIN", "DOCTOR", "ASSISTANT"]}>
+        <ProfileLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -65,16 +69,17 @@ export const routes = createBrowserRouter([
       {
         path: "/profile/change-password",
         element: <ChangePassword />,
-      }
+      },
+
     ]
   },
   {
     path: "/dashboard",
     errorElement: <Dashboardlayout />,
     element: (
-      // <ProtectedRoute roles={["ADMIN", "ASSISTANT"]}>
-      <Dashboardlayout />
-      // </ProtectedRoute>
+      <ProtectedRoute roles={["ADMIN", "DOCTOR", "ASSISTANT"]}>
+        <Dashboardlayout />
+      </ProtectedRoute>
     ),
     children: generateRoutes(dashboardRoutes),
   },
