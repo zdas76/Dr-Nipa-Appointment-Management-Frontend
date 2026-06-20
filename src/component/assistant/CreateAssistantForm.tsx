@@ -57,7 +57,6 @@ export default function CreateAssistantForm({ onCancel }: CreateAssistantFormPro
     const onSubmit = async (data: FormData) => {
         const res = await assistantRegistration(data)
         const result = await getResponse(res)
-        console.log(result);
         if (result?.success) {
             toast.success(result.message);
             onCancel?.();

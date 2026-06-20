@@ -1,4 +1,4 @@
-import { AccessAlarmOutlined, AddCommentRounded, ChecklistRtl, PersonalInjuryRounded, } from "@mui/icons-material";
+import { AccessAlarmOutlined, AddCommentRounded, ChecklistRtl, FolderCopy, Forum, PersonalInjuryRounded, Summarize, } from "@mui/icons-material";
 import AssistantManagement from "../pages/dashboard/assistant/Assistant";
 import PatientManagement from "../pages/dashboard/patient/Patient";
 import ConnectorManagement from "../pages/dashboard/connector/Connector";
@@ -9,6 +9,8 @@ import ViewPatient from "../pages/dashboard/patient/ViewPatient";
 import ViewConnectorInfo from "../pages/dashboard/connector/ViewConnectorInfo";
 import ViewAppointmentinfo from "../pages/dashboard/Appoint/ViewAppointmentinfo";
 import AppointmentList from "../pages/dashboard/Appoint/AppointmentList";
+import SendSmsToPatient from "../pages/dashboard/sendSms/SendSmsToPatient";
+import DailyReport from "../pages/dashboard/report/DailyReport";
 
 
 export interface RouteConfig {
@@ -52,7 +54,7 @@ export const dashboardRoutes: RouteConfig[] = [
     element: <PatientManagement />,
   },
   {
-    path: "patient-management/:id",
+    path: "patient-management/:patientId",
     title: "Patient Management",
     icon: <PersonalInjuryRounded />,
     roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
@@ -90,10 +92,33 @@ export const dashboardRoutes: RouteConfig[] = [
     hidden: true,
   },
   {
-    path: "appointment-list",
-    title: "Appointment List",
+    path: "patient-list",
+    title: "Patient List",
     icon: <ChecklistRtl />,
     roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
     element: <AppointmentList />,
+  },
+  {
+    path: "send-sms",
+    title: "Send SMS",
+    icon: <Forum />,
+    roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
+    element: <SendSmsToPatient />,
+
+  },
+  {
+    path: "report",
+    title: "Report",
+    icon: <FolderCopy />,
+    roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
+    children: [
+      {
+        path: "daily-report",
+        title: "Daily Report",
+        icon: <Summarize />,
+        roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
+        element: <DailyReport />,
+      },
+    ]
   }
 ];

@@ -58,7 +58,6 @@ export default function EditProfile({ email, onCancel }: EditProfileProps) {
     }, [doctor, setValue, refetchDoctor]);
 
     const onSubmit = async (data: ProfileFormValues) => {
-        console.log(data)
         try {
             const res = await updateDoctor({ email: email, ...data }).unwrap();
             const result = await getResponse(res)

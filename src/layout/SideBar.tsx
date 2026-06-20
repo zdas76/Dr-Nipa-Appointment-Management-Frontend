@@ -157,13 +157,6 @@ export default function SideBar() {
 
   return (
     <Box component="section" sx={{ py: 2 }}>
-      {/* Brand/Logo Area can go here */}
-      <Box sx={{ px: 3, mb: 4 }}>
-        <Typography variant="h6" sx={{ color: "white", fontWeight: 700, fontSize: "1.1rem" }}>
-          Appoint<span style={{ color: "#3b82f6" }}>Ment</span>
-        </Typography>
-      </Box>
-
       <Box sx={{ mb: 2 }}>
         <Typography
           variant="caption"

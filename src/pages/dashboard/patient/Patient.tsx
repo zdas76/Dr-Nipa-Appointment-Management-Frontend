@@ -11,7 +11,7 @@ import type { TPatient } from "../../../types/User";
 import { Link } from "react-router";
 
 export default function PatientManagement() {
-  const { data: patients, isLoading } = useGetAllPatientQuery(undefined, { refetchOnMountOrArgChange: true });
+  const { data: patients, isLoading } = useGetAllPatientQuery("", { refetchOnMountOrArgChange: true });
   const [deletePatient] = useDeletePatientMutation();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<TPatient | null>(null);
@@ -54,6 +54,7 @@ export default function PatientManagement() {
                   <TableCell align="left">Sex</TableCell>
                   <TableCell align="left">Contact Number</TableCell>
                   <TableCell align="left">Address</TableCell>
+                  <TableCell align="left">Patient Id</TableCell>
                   <TableCell align="center">Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -71,9 +72,10 @@ export default function PatientManagement() {
                     <TableCell align="left">{row.sex}</TableCell>
                     <TableCell align="left">{row.contactNumber}</TableCell>
                     <TableCell align="left">{row.address}</TableCell>
+                    <TableCell align="left">{row.patientId}</TableCell>
                     <TableCell align="center">
                       <Stack direction="row" sx={{ alignItems: "center", justifyContent: "center", gap: 2 }}>
-                        <Link to={`${row.id}`}>
+                        <Link to={`${row.patientId}`}>
                           <Visibility
                             color="primary"
                             sx={{ cursor: "pointer" }}

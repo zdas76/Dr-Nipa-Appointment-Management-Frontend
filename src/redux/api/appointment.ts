@@ -24,7 +24,7 @@ const appointmentApi = baseApi.injectEndpoints({
         }),
 
         getAppointmentById: builder.query({
-            query: (id) => {
+            query: (id: number) => {
                 return {
                     url: `/appointment/${id}`,
                     method: "GET",
@@ -33,15 +33,6 @@ const appointmentApi = baseApi.injectEndpoints({
             providesTags: ["appointment"],
         }),
 
-        getLastAppointmentDate: builder.query<{ data: { result: { visitingDate: string } | null } }, number>({
-            query: (patientId: number) => {
-                return {
-                    url: `/appointment/last-date?patientId=${patientId}`,
-                    method: "GET",
-                };
-            },
-            providesTags: ["appointment"],
-        }),
 
         updateAppointment: builder.mutation<TAppointment, Partial<TAppointment>>({
             query: ({ id, ...info }) => {
@@ -53,7 +44,7 @@ const appointmentApi = baseApi.injectEndpoints({
             },
             invalidatesTags: ["appointment"],
         }),
-        updateAppointmentStatus: builder.mutation<void, { id: number; status: "BOOKED" | "PRESENT" | "ABSENT" }>({
+        updateAppointmentStatus: builder.mutation<void, { id: number; status: "BOOKED" | "PRESENT" | "ABSENT" | "VISITED" }>({
             query: ({ id, status }) => ({
                 url: `/appointment/${id}/status`,
                 method: "PATCH",
@@ -77,7 +68,6 @@ export const {
     useCreateAppointmentMutation,
     useGetAllAppointmentByDateQuery,
     useGetAppointmentByIdQuery,
-    useGetLastAppointmentDateQuery,
     useUpdateAppointmentMutation,
     useUpdateAppointmentStatusMutation,
     useDeleteAppointmentMutation,

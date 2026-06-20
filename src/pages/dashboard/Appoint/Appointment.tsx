@@ -10,6 +10,7 @@ import { getResponse } from "../../../utils/getResponst";
 import type { TAppointment } from "../../../types/User";
 import { Link } from "react-router";
 import Swal from 'sweetalert2'
+import dayjs from 'dayjs'
 
 export default function AppointmentManagement() {
 
@@ -39,13 +40,16 @@ export default function AppointmentManagement() {
             cancelButtonColor: "#d33",
             confirmButtonText: "Yes, delete it!"
         }).then(async (result) => {
-            const res = await deleteAppointment(id);
-            getResponse(res);
-            if (result.isConfirmed) Swal.fire({
-                title: "Deleted!",
-                text: "Your file has been deleted.",
-                icon: "success"
-            });
+            if (result.isConfirmed) {
+                const res = await deleteAppointment(id);
+                getResponse(res);
+
+                Swal.fire({
+                    title: "Deleted!",
+                    text: "Your file has been deleted.",
+                    icon: "success"
+                });
+            }
         });
     };
 
@@ -78,7 +82,7 @@ export default function AppointmentManagement() {
                                 <TableCell align="left">Visiting Date</TableCell>
                                 <TableCell align="left">Visiting Time</TableCell>
                                 <TableCell align="left">Type</TableCell>
-                                <TableCell align="left">Connector</TableCell>
+                                <TableCell align="left">Patient ID</TableCell>
                                 <TableCell align="center">Action</TableCell>
                             </TableRow>
                         </TableHead>
@@ -94,10 +98,10 @@ export default function AppointmentManagement() {
                                     </TableCell>
                                     <TableCell align="left">{row.patientInfo?.contactNumber}</TableCell>
                                     <TableCell align="left">{row.patientInfo?.sex}</TableCell>
-                                    <TableCell align="left">{row.visitingDate}</TableCell>
+                                    <TableCell align="left">{dayjs(row.visitingDate).format("DD-MM-YYYY")}</TableCell>
                                     <TableCell align="left">{row.visitingTime || "N/A"}</TableCell>
                                     <TableCell align="left">{row.patientType}</TableCell>
-                                    <TableCell align="left">{row.connector?.name || "N/A"}</TableCell>
+                                    <TableCell align="left">{row.patientId || "N/A"}</TableCell>
                                     <TableCell align="center">
                                         <Stack direction="row" sx={{ alignItems: "center", justifyContent: "center", gap: 2 }}>
                                             <Link to={`${row.id}`}>
@@ -111,11 +115,18 @@ export default function AppointmentManagement() {
                                                 sx={{ cursor: "pointer" }}
                                                 onClick={() => handleEdit(row.id as number)}
                                             />
-                                            <Delete
-                                                color="error"
-                                                sx={{ cursor: "pointer" }}
-                                                onClick={() => handleDelete(row.id as number)}
-                                            />
+                                            {row.paymentStatus !== "PAID" ? (
+                                                <Delete
+                                                    color="error"
+                                                    sx={{ cursor: "pointer" }}
+                                                    onClick={() => handleDelete(row.id as number)}
+                                                />
+                                            ) : (
+                                                <Delete
+                                                    color="disabled"
+                                                    sx={{ cursor: "not-allowed" }}
+                                                />
+                                            )}
                                         </Stack>
                                     </TableCell>
                                 </TableRow>

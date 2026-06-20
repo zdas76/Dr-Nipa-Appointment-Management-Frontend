@@ -1,3 +1,4 @@
+import type { TUpdateAssistant } from "../../component/assistant/UpdateAssistantForm";
 import type { TAssistant } from "../../types/User";
 import { baseApi } from "./baseApi";
 
@@ -21,12 +22,12 @@ const assistantApi = baseApi.injectEndpoints({
             },
             providesTags: ["user"],
         }),
-        updateAssistant: builder.mutation<TAssistant, Partial<TAssistant>>({
-            query: ({ id, ...info }) => {
+        updateAssistant: builder.mutation<TAssistant, { id: number, data: Partial<TUpdateAssistant> }>({
+            query: ({ id, data }) => {
                 return {
                     url: `/assistant/${id}`,
                     method: "PATCH",
-                    body: info,
+                    body: data,
                 };
             },
             invalidatesTags: ["user"],

@@ -27,6 +27,7 @@ export type TAssistant = {
 
 export type TPatient = {
   id?: number;
+  patientId: number,
   name: string;
   age: number;
   sex: "MALE" | "FEMALE" | "OTHER";
@@ -53,7 +54,7 @@ export type TAppointment = {
   patientId: number;
   visitingDate: string;
   patientType: "NEW" | "OLD";
-  status?: "BOOKED" | "PRESENT" | "ABSENT";
+  status?: "BOOKED" | "PRESENT" | "ABSENT" | "VISITED";
   visitingTime?: string;
   connectorId?: number | null;
   visitingFee?: number | null;
@@ -61,6 +62,7 @@ export type TAppointment = {
   booldPusher?: string | null;
   bloodGroup?: string | null;
   discount?: number | null;
+  paymentStatus?: "PAID" | "UNPAID" | "PARTIALLY_PAID";
   patient?: TPatient;
   connector?: TConnector;
   patientInfo?: {

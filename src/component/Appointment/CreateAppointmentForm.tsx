@@ -3,26 +3,37 @@ import {
     Autocomplete,
     Box,
     Button,
+    CircularProgress,
+    FormControl,
+    InputLabel,
     MenuItem,
     Paper,
+    Select,
     Stack,
     TextField,
     Typography
 } from "@mui/material";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { z } from "zod";
-import { useGetAllPatientSearchQuery } from "../../redux/api/patientAPI";
+import { useGetAllPatientSearchQuery, useGetPatientByIdQuery } from "../../redux/api/patientAPI";
 import { useGetAllConnectorQuery } from "../../redux/api/connectorAPI";
-import { useCreateAppointmentMutation, useGetLastAppointmentDateQuery } from "../../redux/api/appointment";
+import { useCreateAppointmentMutation } from "../../redux/api/appointment";
 import type { TConnector, TPatient } from "../../types/User";
 import { getResponse } from "../../utils/getResponst";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { useGetDoctorInforQuery } from "../../redux/api/doctorAPI";
+import dayjs from "dayjs";
+import { SearchOffSharp } from "@mui/icons-material";
 
 const schema = z.object({
-    patientId: z.number({ message: "Patient ID is required" }).min(1),
+    name: z.string().min(1, "Name is required"),
+    age: z.number({ message: "Age is required" }).min(1),
+    sex: z.enum(["MALE", "FEMALE", "OTHER"]),
+    contactNumber: z.string().min(1, "Contact number is required"),
+    address: z.string().min(1, "Address is required"),
+    patientId: z.number().optional().nullable(),
     visitingDate: z.string().min(1, "Visiting date is required"),
     patientType: z.enum(["NEW", "OLD"]),
     visitingTime: z.string().optional(),
@@ -42,70 +53,104 @@ interface CreateAppointmentFormProps {
 
 export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFormProps) {
 
+    const [defaultPatientId, setDefaultPatientId] = useState<number | null>(null);
     const [searchPatient, setSearchPatient] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState('');
-
+    const [patientId, setPatientId] = useState<number | null>(null);
     const { data: patients, isLoading: isPatientsLoading } = useGetAllPatientSearchQuery(debouncedSearch, { skip: !debouncedSearch });
     const { data: connectors, isLoading: isConnectorsLoading } = useGetAllConnectorQuery(undefined);
     const { data: doctors, isLoading: isDoctorLoading } = useGetDoctorInforQuery([]);
     const [createAppointment, { isLoading }] = useCreateAppointmentMutation();
 
     const doctorinfo = doctors?.data[0];
+
     const {
         register,
         handleSubmit,
         control,
         setValue,
         reset,
-        watch,
         formState: { errors },
     } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
             patientType: "NEW",
+            visitingTime: dayjs().hour(16).minute(0).format("HH:mm"),
+            name: "",
+            age: 0,
+            sex: "MALE",
+            contactNumber: "",
+            address: "",
+            patientId: null,
         }
     });
 
-    const patientId = watch("patientId");
-    const vDate = watch("visitingDate");
+    const vDate = useWatch({
+        control,
+        name: "visitingDate",
+    });
 
-    const { data: lastAppointments } = useGetLastAppointmentDateQuery(patientId, { skip: !patientId });
+    const contactNumber = useWatch({
+        control,
+        name: "contactNumber",
+    });
+
+    const { data: patientData } = useGetPatientByIdQuery(patientId as number, { skip: !patientId, refetchOnMountOrArgChange: true });
+    const patientInfo = patientData?.data;
 
     useEffect(() => {
-        const lastApptDateStr = lastAppointments?.data?.result?.visitingDate;
+        if (patientInfo) {
+            setValue("name", patientInfo?.name);
+            setValue("age", patientInfo?.age);
+            setValue("sex", patientInfo?.sex);
+            setValue("contactNumber", patientInfo?.contactNumber);
+            setValue("address", patientInfo?.address);
+            setValue("patientId", patientInfo?.patientId);
 
-        if (lastApptDateStr && vDate && doctorinfo) {
-            const lastDate = new Date(lastApptDateStr);
-            const visitingDate = new Date(vDate);
+        } else {
+            setValue("name", "");
+            setValue("age", 0);
+            setValue("sex", "MALE");
+            setValue("address", "");
+            setValue("patientId", null);
+        }
 
-            // Calculate total months difference
-            const yearDiff = visitingDate.getFullYear() - lastDate.getFullYear();
-            const monthDiff = visitingDate.getMonth() - lastDate.getMonth();
+    }, [contactNumber, patientInfo, setValue]);
 
-            const totalMonths = yearDiff * 12 + monthDiff;
 
-            // Optional: check exact day difference
+    useEffect(() => {
+
+        if (patientInfo && vDate) {
+            const lastDate = dayjs(patientInfo?.appointments[0]?.visitingDate || "");
+            const expirationDate = dayjs(lastDate).add(3, "month");
+            const visitingDate = dayjs(vDate);
+
             const isExceeded =
-                totalMonths > 3 ||
-                (totalMonths === 3 && visitingDate.getDate() >= lastDate.getDate());
+                visitingDate.isAfter(expirationDate);
 
             if (isExceeded) {
-                setValue("patientType", "OLD");
-                setValue("visitingFee", doctorinfo?.oldPatientVisitingFee);
-            } else {
                 setValue("patientType", "NEW");
                 setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
+            } else {
+                setValue("patientType", "OLD");
+                setValue("visitingFee", doctorinfo?.oldPatientVisitingFee);
+
             }
         } else {
             setValue("patientType", "NEW");
             setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
         }
-    }, [lastAppointments, vDate, doctorinfo, setValue]);
+    }, [patientInfo, vDate, setValue, doctorinfo]);
 
     useEffect(() => {
         const timerId = setTimeout(() => {
-            setDebouncedSearch(searchPatient);
-        }, 1000);
+            if (searchPatient.length >= 5) {
+                setDebouncedSearch(searchPatient);
+            } else {
+                setDebouncedSearch("");
+            }
+
+        }, 500);
 
         return () => {
             clearTimeout(timerId);
@@ -114,6 +159,7 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
 
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
+
         try {
             const res = await createAppointment(data).unwrap();
             const result = getResponse(res);
@@ -129,12 +175,12 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
         }
     };
 
-    if (isDoctorLoading || isPatientsLoading || isConnectorsLoading) {
-        return <div>Loading...</div>;
+    if (isDoctorLoading) {
+        return <CircularProgress color="primary" />;
     }
 
     return (
-        <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
+        <Paper elevation={0} sx={{ p: 2, borderRadius: 4, border: "1px solid #e2e8f0" }}>
             <Typography variant="h5" sx={{ fontWeight: 800, mb: 3, color: "#1e293b" }}>
                 Add New Appointment
             </Typography>
@@ -145,34 +191,111 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
                         <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "#3b82f6", mb: 2, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                             Appointment Information
                         </Typography>
-                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr " }, gap: 3 }}>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+
+                            <Box className="flex items-center gap-2">
+                                <TextField
+                                    fullWidth
+                                    label="Patient Id"
+                                    variant="outlined"
+                                    type="number"
+                                    name="patientId"
+                                    onChange={(e) => setDefaultPatientId(Number(e.target.value))}
+                                />
+
+                                <SearchOffSharp sx={{ fontSize: 55 }} className="text-white cursor-pointer p-2 bg-green-500 rounded-xl" onClick={() => setPatientId(defaultPatientId)} />
+
+                            </Box>
+
                             <Controller
-                                name="patientId"
+                                name="contactNumber"
                                 control={control}
                                 render={({ field: { onChange, value } }) => (
                                     <Autocomplete
+                                        freeSolo
                                         options={patients?.data || []}
-                                        getOptionLabel={(option: TPatient) => `${option.name} (${option.contactNumber})`}
-                                        loading={isPatientsLoading}
-                                        value={patients?.data?.find((p: TPatient) => p.id === value) || null}
-                                        onChange={(_, newValue) => {
-                                            onChange(newValue ? newValue.id : null);
+                                        getOptionLabel={(option: TPatient | string) => {
+                                            if (typeof option === "string") {
+                                                return option;
+                                            }
+                                            return option.contactNumber;
                                         }}
+                                        loading={isPatientsLoading}
+                                        value={patients?.data?.find((p: TPatient) => p.contactNumber === value) || value || null}
+                                        onInputChange={(_, newInputValue) => {
+                                            onChange(newInputValue);
+                                            setSearchPatient(newInputValue);
+                                        }}
+                                        onChange={(_, newValue) => {
 
+                                            if (typeof newValue === "string") {
+                                                onChange(newValue);
+                                            } else if (newValue && typeof newValue === "object") {
+                                                onChange(newValue.contactNumber);
+                                                setPatientId(newValue.patientId);
+                                            } else {
+                                                onChange("");
+                                            }
+                                        }}
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
-                                                label="Select Patient"
-                                                onChange={(e) => {
-                                                    setSearchPatient(e.target.value)
-                                                }}
-                                                error={!!errors.patientId}
-                                                helperText={errors.patientId?.message}
+                                                label="Contact Number"
+                                                error={!!errors.contactNumber}
+                                                helperText={errors.contactNumber?.message}
                                             />
                                         )}
                                     />
                                 )}
                             />
+
+                            <TextField
+                                fullWidth
+                                label="Full Name"
+                                variant="outlined"
+                                focused
+                                {...register("name")}
+                                error={!!errors.name}
+                                helperText={errors.name?.message}
+                            />
+                            <TextField
+                                fullWidth
+                                label="Age"
+                                type="number"
+                                focused
+                                variant="outlined"
+                                {...register("age", { valueAsNumber: true })}
+                                error={!!errors.age}
+                                helperText={errors.age?.message}
+                            />
+                            <FormControl fullWidth error={!!errors.sex}>
+                                <InputLabel>Sex</InputLabel>
+                                <Controller
+                                    name="sex"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select {...field} label="Sex">
+                                            <MenuItem value="MALE">Male</MenuItem>
+                                            <MenuItem value="FEMALE">Female</MenuItem>
+                                            <MenuItem value="OTHER">Other</MenuItem>
+                                        </Select>
+                                    )}
+                                />
+                            </FormControl>
+
+                            <TextField
+                                fullWidth
+                                label="Address"
+                                variant="outlined"
+                                multiline
+                                focused
+                                rows={2}
+                                sx={{ gridColumn: { md: "span 2" } }}
+                                {...register("address")}
+                                error={!!errors.address}
+                                helperText={errors.address?.message}
+                            />
+
                             <TextField
                                 fullWidth
                                 label="Visiting Date"
@@ -192,6 +315,7 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
                                         {...field}
                                         select
                                         label="Patient Type"
+                                        defaultValue=""
                                         error={!!errors.patientType}
                                         helperText={errors.patientType?.message}
                                         disabled
@@ -224,10 +348,6 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
                                         value={connectors?.data?.find((c: TConnector) => c.id === value) || null}
                                         onChange={(_, newValue) => {
                                             onChange(newValue ? newValue.id : null);
-                                            if (newValue) {
-                                                // Automatically set visiting fee if it's a new patient (as a default)
-                                                setValue("visitingFee", newValue.newPatientAmount);
-                                            }
                                         }}
                                         renderInput={(params) => (
                                             <TextField

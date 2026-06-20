@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Appointment Print Page</title>
+    <style>
+        /* ── Reset & Base ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* ── Main Container ── */
+        .print-wrapper {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ── Content Box (matches width:390, p:1) ── */
+        .print-box {
+            width: 390px;
+            padding: 8px;
+            background: white;
+        }
+
+        /* ── Flex row: space-between + align-center ── */
+        .row-stack {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ── Inner stack (the content column) ── */
+        .content-stack {
+            flex: 1;
+        }
+
+        /* ── Typography overrides ── */
+        .doctor-name {
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 0.3px;
+            margin-bottom: 2px;
+        }
+
+        .designation {
+            font-weight: 700;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 6px;
+        }
+
+        .divider-custom {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 10px 0 12px 0;
+        }
+
+        .info-line {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #1a1a1a;
+        }
+
+        .info-line strong {
+            font-weight: 600;
+        }
+
+        /* ── Action Buttons Stack ── */
+        .actions {
+            margin-top: 40px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+        }
+
+        .btn {
+            padding: 8px 28px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #1976d2;
+            color: #1976d2;
+        }
+
+        .btn-outline:hover {
+            background: rgba(25, 118, 210, 0.08);
+        }
+
+        .btn-contained {
+            background: #1976d2;
+            color: white;
+            box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+        }
+
+        .btn-contained:hover {
+            background: #1565c0;
+            box-shadow: 0 4px 8px rgba(25, 118, 210, 0.4);
+        }
+
+        /* ── Print styles ── */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .print-wrapper {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 0;
+            }
+
+            .actions {
+                display: none !important;
+            }
+
+            .btn {
+                display: none !important;
+            }
+
+            .print-box {
+                width: 100%;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="print-wrapper">
+        <!-- ─── PRINTABLE AREA ─── -->
+        <div class="print-box" id="printableArea">
+            <div class="row-stack">
+                <div class="content-stack">
+
+                    <div class="doctor-name">DR. NAHIDA ISLAM NIPA</div>
+
+                    <div class="designation">
+                        Associate Professor <br />
+                        &amp; Head of Department
+                    </div>
+
+                    <hr class="divider-custom" />
+
+                    <br />
+
+                    <!-- Patient Info – populated by JavaScript -->
+                    <div class="info-line"><strong>Patient Name:</strong> <span id="patientName">—</span></div>
+                    <div class="info-line"><strong>Contact Number:</strong> <span id="contactNumber">—</span></div>
+                    <div class="info-line"><strong>Gender:</strong> <span id="gender">—</span></div>
+                    <div class="info-line"><strong>Visiting Date:</strong> <span id="visitingDate">—</span></div>
+                    <div class="info-line"><strong>Visiting Time:</strong> <span id="visitingTime">—</span></div>
+                    <div class="info-line"><strong>Visiting Fee:</strong> <span id="visitingFee">—</span></div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── ACTION BUTTONS ─── -->
+        <div class="actions">
+            <button class="btn btn-outline" id="cancelBtn">Cancel</button>
+            <button class="btn btn-contained" id="printBtn">Print</button>
+        </div>
+    </div>
+
+    <script>
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 1.  SAMPLE DATA (matching TAppointment shape)
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const appointmentData = {
+            patientInfo: {
+                name: 'John Doe',
+                contactNumber: '+8801712345678',
+                sex: 'Male',
+            },
+            visitingDate: '2026-06-20',      // will be formatted to DD-MM-YYYY
+            visitingTime: '10:30 AM',
+            visitingFee: '500 BDT',
+        };
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 2.  HELPER: format date (DD-MM-YYYY)
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function formatDate(dateStr) {
+            if (!dateStr) return '—';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                // YYYY-MM-DD → DD-MM-YYYY
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 3.  RENDER: populate the UI with data
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function renderAppointment(data) {
+            const p = data?.patientInfo || {};
+
+            document.getElementById('patientName').textContent = p.name || '—';
+            document.getElementById('contactNumber').textContent = p.contactNumber || '—';
+            document.getElementById('gender').textContent = p.sex || '—';
+            document.getElementById('visitingDate').textContent = formatDate(data?.visitingDate);
+            document.getElementById('visitingTime').textContent = data?.visitingTime || '—';
+            document.getElementById('visitingFee').textContent = data?.visitingFee || '—';
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 4.  EVENT HANDLERS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function handleCancel() {
+            if (confirm('Are you sure you want to cancel?')) {
+                alert('Cancelled! (Replace this with your actual cancel logic)');
+            }
+        }
+
+        function handlePrint() {
+            window.print();
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 5.  WIRE UP BUTTONS & INIT
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        document.addEventListener('DOMContentLoaded', function () {
+            // Render data
+            renderAppointment(appointmentData);
+
+            // Button listeners
+            document.getElementById('cancelBtn').addEventListener('click', handleCancel);
+            document.getElementById('printBtn').addEventListener('click', handlePrint);
+        });
+    </script>
+
+</body>
+
+</html>

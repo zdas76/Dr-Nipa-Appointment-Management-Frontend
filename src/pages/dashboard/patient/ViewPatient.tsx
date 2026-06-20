@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
     Box,
     Grid,
@@ -21,10 +22,10 @@ import { useParams, useNavigate } from "react-router";
 import { useGetPatientByIdQuery } from "../../../redux/api/patientAPI";
 
 export default function ViewPatient() {
-    const { id } = useParams();
+    const { patientId } = useParams();
     const navigate = useNavigate();
-    const { data, isLoading } = useGetPatientByIdQuery(Number(id));
-    const patientData = data?.data;
+    const { data, isLoading } = useGetPatientByIdQuery(Number(patientId));
+    const patientData = (data as any)?.data;
 
     if (isLoading) {
         return (

@@ -34,7 +34,7 @@ export default function Profile() {
 
     const [addSafe, { isLoading: addSafeLoading }] = useAddSafeMutation();
 
-    const { data: DoctorData, isLoading } = useGetDoctorQuery(user?.email, {
+    const { data: DoctorData, isLoading } = useGetDoctorQuery(user?.email as string, {
         skip: !user?.email,
         refetchOnMountOrArgChange: true,
     });
@@ -76,13 +76,10 @@ export default function Profile() {
     }
 
     const handelCheck = (checked: boolean) => {
-        console.log("checked", checked)
         addSafe({ id: DoctorData?.data?.isSafes[0]?.id, payload: { isSafe: checked, doctorId: DoctorData?.data?.id } })
-
     }
 
     const handelLimit = (limit: number) => {
-        console.log("limit", limit)
         addSafe({ id: DoctorData?.data?.isSafes[0]?.id, payload: { limit, doctorId: DoctorData?.data?.id } })
     }
 
@@ -175,7 +172,7 @@ export default function Profile() {
                                     }}
                                 />
                                 <BasicModal buttonLabel="Edit Profile">
-                                    <EditProfile email={user.email} />
+                                    <EditProfile email={user?.email || ''} />
                                 </BasicModal>
                             </Box>
                         </Stack>
@@ -272,14 +269,14 @@ export default function Profile() {
                                 }}>
                                     <Box sx={{ display: "flex", alignItems: "left", gap: 2, justifyContent: "space-between" }}>
                                         <Typography variant="h6" sx={{ fontWeight: 800, color: "#0f172a", mb: 2, px: 2 }}>Is Safe</Typography>
-                                        <Switch defaultChecked={DoctorData?.data?.isSafes[0].isSafe} onChange={(e) => handelCheck(e.target.checked)} disabled={addSafeLoading} />
+                                        <Switch defaultChecked={DoctorData?.data?.isSafes[0]?.isSafe} onChange={(e) => handelCheck(e.target.checked)} disabled={addSafeLoading} />
                                     </Box>
 
                                     <Box sx={{ display: "flex", alignItems: "left", gap: 2, justifyContent: "space-between" }}>
                                         <Typography variant="h6" sx={{ fontWeight: 800, color: "#0f172a", mb: 2, px: 2 }}>Data Limit</Typography>
                                         <TextField
                                             disabled={addSafeLoading}
-                                            defaultValue={DoctorData?.data?.isSafes[0].limit}
+                                            defaultValue={DoctorData?.data?.isSafes[0]?.limit}
                                             onBlur={(e) => handelLimit(Number(e.target.value))}
                                             type="number"
                                             size="small"

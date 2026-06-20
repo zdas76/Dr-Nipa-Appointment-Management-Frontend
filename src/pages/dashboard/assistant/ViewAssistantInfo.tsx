@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
     Box,
     Grid,
@@ -28,7 +29,7 @@ export default function ViewAssistantInfo() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { data, isLoading } = useGetAssistantByIdQuery(Number(id));
-    const assistantData = data?.data;
+    const assistantData = (data as any)?.data;
 
     if (isLoading) {
         return (
@@ -54,7 +55,7 @@ export default function ViewAssistantInfo() {
 
             <Grid container spacing={4}>
                 {/* Left Column: Profile Summary */}
-                <Grid xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                     <Paper elevation={0} sx={{
                         p: 4,
                         borderRadius: 4,
@@ -115,7 +116,7 @@ export default function ViewAssistantInfo() {
                 </Grid>
 
                 {/* Right Column: Detailed Info */}
-                <Grid xs={12} md={8}>
+                <Grid size={{ xs: 12, md: 8 }}>
                     <Stack spacing={4}>
                         {/* Personal Details Card */}
                         <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
@@ -163,7 +164,7 @@ interface InfoItemProps {
 
 function InfoItem({ label, value, icon }: InfoItemProps) {
     return (
-        <Grid xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
             <Typography variant="caption" sx={{
                 color: "#64748b",
                 fontWeight: 700,

@@ -1,5 +1,6 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useUpdateAppointmentMutation, useGetAppointmentByIdQuery } from "../../redux/api/appointment";
 import {
+    Autocomplete,
     Box,
     Button,
     FormControl,
@@ -11,15 +12,19 @@ import {
     TextField,
     Typography
 } from "@mui/material";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { z } from "zod";
-import { useUpdateAppointmentMutation, useGetLastAppointmentDateQuery, useGetAppointmentByIdQuery } from "../../redux/api/appointment";
+
 import { getResponse } from "../../utils/getResponst";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { useGetDoctorInforQuery } from "../../redux/api/doctorAPI";
 import { FrontLoader } from "@mui/icons-material";
+import dayjs from "dayjs";
+import { useGetAllConnectorQuery } from "../../redux/api/connectorAPI";
+import type { TConnector } from "../../types/User";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const schema = z.object({
     patientId: z.number({ message: "Patient ID is required" }).min(1),
@@ -31,6 +36,9 @@ const schema = z.object({
     visitingFee: z.number().optional().nullable(),
     discount: z.number().optional().nullable(),
     bloodGroup: z.string().optional().nullable(),
+    paymentStatus: z.enum(["PAID", "UNPAID", "PARTIALLY_PAID"]),
+    connectorFee: z.number().optional().nullable(),
+    connectorId: z.number().optional().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -47,6 +55,8 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
     const { data: doctors, isLoading: isDoctorLoading } = useGetDoctorInforQuery([]);
     const doctorinfo = doctors?.data[0];
 
+    const { data: connectors, isLoading: isConnectorsLoading } = useGetAllConnectorQuery(undefined);
+
     const [updateAppointment, { isLoading }] = useUpdateAppointmentMutation();
 
     const {
@@ -55,30 +65,30 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
         control,
         setValue,
         reset,
-        watch,
         formState: { errors },
     } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
-            patientId: 0,
-            visitingDate: "",
-            patientType: "NEW",
-            visitingTime: "",
-            weight: null,
-            booldPusher: "",
-            visitingFee: null,
-            discount: null,
-            bloodGroup: "",
+            patientId: data?.patientId || 0,
+            visitingDate: data?.visitingDate || "",
+            patientType: data?.patientType || "NEW",
+            visitingTime: data?.visitingTime || "",
+            weight: data?.weight || null,
+            booldPusher: data?.booldPusher || "",
+            visitingFee: data?.visitingFee,
+            discount: data?.discount,
+            bloodGroup: data?.bloodGroup || "",
+            connectorFee: data?.connectorFee,
+            paymentStatus: data?.paymentStatus || "UNPAID",
+            connectorId: data?.connectorId || null,
         }
     });
 
     useEffect(() => {
         if (data) {
-            // Ensure date is formatted as YYYY-MM-DD for the input type="date"
             let formattedDate = "";
             if (data.visitingDate) {
                 try {
-                    // This handles ISO strings or parseable date strings safely
                     formattedDate = new Date(data.visitingDate).toISOString().split('T')[0];
                 } catch {
                     formattedDate = data.visitingDate.substring(0, 10);
@@ -87,54 +97,66 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
 
             reset({
                 patientId: data.patientId,
+                connectorId: data.connectorId || null,
                 visitingDate: formattedDate,
                 patientType: data.patientType,
-                visitingTime: data.visitingTime?.substring(0, 5) || "",
+                visitingTime: data.visitingTime || "",
                 weight: data.weight || null,
                 booldPusher: data.booldPusher || "",
                 visitingFee: data.visitingFee || null,
                 discount: data.discount || null,
                 bloodGroup: data.bloodGroup || "",
+                paymentStatus: data.paymentStatus ?? "UNPAID",
+                connectorFee: data.connectorFee || null,
             });
         }
     }, [data, reset]);
 
-    const patientId = watch("patientId");
-    const vDate = watch("visitingDate");
+    const vDate = useWatch({
+        control,
+        name: "visitingDate",
+    });
 
-    const { data: lastAppointments } = useGetLastAppointmentDateQuery(patientId, { skip: !patientId });
+    const patientType = useWatch({
+        control,
+        name: "patientType",
+    });
+    // Fetch last appointment date for patient
 
     useEffect(() => {
-        const lastApptDateStr = lastAppointments?.data?.result?.visitingDate;
+        const lastApptDateStr = data?.visitingDate;
 
         if (lastApptDateStr && vDate && doctorinfo) {
-            const lastDate = new Date(lastApptDateStr);
-            const visitingDate = new Date(vDate);
-
-            const yearDiff = visitingDate.getFullYear() - lastDate.getFullYear();
-            const monthDiff = visitingDate.getMonth() - lastDate.getMonth();
-
-            const totalMonths = yearDiff * 12 + monthDiff;
+            const lastDate = dayjs(lastApptDateStr);
+            const expirationDate = dayjs(lastDate).add(3, "month");
+            const visitingDate = dayjs(vDate);
 
             const isExceeded =
-                totalMonths > 3 ||
-                (totalMonths === 3 && visitingDate.getDate() >= lastDate.getDate());
+                visitingDate.isAfter(expirationDate);
 
-            if (isExceeded) {
+            if (isExceeded || lastApptDateStr === data?.visitingDate) {
                 setValue("patientType", "NEW");
-                setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
-
             } else {
                 setValue("patientType", "OLD");
-                setValue("visitingFee", doctorinfo?.oldPatientVisitingFee);
             }
-        } else if (lastApptDateStr === null) {
+        } else {
             setValue("patientType", "NEW");
-            setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
         }
-    }, [lastAppointments, vDate, doctorinfo, setValue]);
+    }, [vDate, doctorinfo, data?.visitingDate, setValue]);
+
+    useEffect(() => {
+        if (patientType === "NEW") {
+            setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
+            setValue("connectorFee", data?.connectorInfo?.newPatientAmount);
+        } else {
+            setValue("visitingFee", doctorinfo?.oldPatientVisitingFee);
+            setValue("connectorFee", data?.connectorInfo?.oldPatientAmount);
+        }
+    }, [patientType, doctorinfo, data, setValue]);
+
 
     const onSubmit: SubmitHandler<FormData> = async (formData) => {
+
         if (!data) return;
         try {
             const res = await updateAppointment({ id: data.id, ...formData }).unwrap();
@@ -271,6 +293,47 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
                                         )}
                                     />
                                 </FormControl>
+
+                                <FormControl fullWidth error={!!errors.paymentStatus}>
+                                    <InputLabel>Payment Status</InputLabel>
+                                    <Controller
+                                        name="paymentStatus"
+                                        control={control}
+                                        defaultValue="UNPAID"
+                                        render={({ field }) => (
+                                            <Select {...field} label="Payment Status">
+                                                {["PAID", "UNPAID", "PARTIALLY_PAID"].map((status) => (
+                                                    <MenuItem key={status} value={status}>{status}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        )}
+                                    />
+                                </FormControl>
+
+                                <Controller
+                                    name="connectorId"
+                                    control={control}
+                                    render={({ field: { onChange, value } }) => (
+                                        <Autocomplete
+                                            options={connectors?.data || []}
+                                            getOptionLabel={(option: TConnector) => `${option.name} (${option.diagnosticName || "No Diagnostic"})`}
+                                            loading={isConnectorsLoading}
+                                            value={connectors?.data?.find((c: TConnector) => c.id === value) || null}
+                                            onChange={(_, newValue) => {
+                                                onChange(newValue ? newValue.id : null);
+                                            }}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label="Select Connector (Optional)"
+                                                    error={!!errors.connectorId}
+                                                    helperText={errors.connectorId?.message}
+                                                />
+                                            )}
+                                        />
+                                    )}
+                                />
+
                             </Box>
                         </Box>
 

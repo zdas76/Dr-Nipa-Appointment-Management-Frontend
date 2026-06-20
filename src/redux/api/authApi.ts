@@ -12,6 +12,15 @@ const authApi = baseApi.injectEndpoints({
       },
       invalidatesTags: ["user"],
     }),
+    changePassword: builder.mutation({
+      query: (payload: { currentPassword: string; newPassword: string }) => ({
+        url: "/auth/change-password",
+        method: "POST",
+        body: payload,
+      }),
+      // Assuming password change doesn't require cache invalidation but may refresh user token
+      invalidatesTags: ["user"],
+    }),
   }),
 });
-export const { useLoginMutation } = authApi;
+export const { useLoginMutation, useChangePasswordMutation } = authApi;

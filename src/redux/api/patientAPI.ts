@@ -37,10 +37,11 @@ const patientApi = baseApi.injectEndpoints({
             providesTags: ["patient"],
         }),
 
-        getPatientById: builder.query<TPatient, number>({
-            query: (id) => {
+        getPatientById: builder.query({
+            query: (patientId: number) => {
+
                 return {
-                    url: `/patient/${id}`,
+                    url: `/patient/${patientId}`,
                     method: "GET",
                 };
             },

@@ -12,7 +12,6 @@ import {
     Typography
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
-import { useEffect } from "react";
 import { z } from "zod";
 import { useUpdateAssistantMutation } from "../../redux/api/assistantAPI";
 import { toast } from "sonner";
@@ -28,7 +27,7 @@ const schema = z.object({
     contactNumber: z.string().optional().nullable(),
 });
 
-type FormData = z.infer<typeof schema>;
+export type TUpdateAssistant = z.infer<typeof schema>;
 
 interface UpdateAssistantFormProps {
     data: TAssistant;
@@ -43,7 +42,7 @@ export default function UpdateAssistantForm({ data, onCancel }: UpdateAssistantF
         handleSubmit,
         control,
         formState: { errors },
-    } = useForm<FormData>({
+    } = useForm<TUpdateAssistant>({
         resolver: zodResolver(schema),
         defaultValues: {
             name: data?.name || "",
@@ -55,19 +54,12 @@ export default function UpdateAssistantForm({ data, onCancel }: UpdateAssistantF
         }
     });
 
-    useEffect(() => {
-        if (Object.keys(errors).length > 0) {
-            console.log("Zod Validation Errors:", errors);
-        }
-    }, [errors]);
-
-    const onSubmit = async (formData: FormData) => {
-        console.log("formData :>> ", formData);
-        console.log("validation errors :>> ", errors);
+    const onSubmit = async (formData: TUpdateAssistant) => {
         try {
-            const res = await updateAssistant({ id: data.id, ...formData });
+            const res = await updateAssistant({ id: data?.id as number, data: formData });
             const result = await getResponse(res);
             if (result?.success) {
+                toast.success(result.message);
                 onCancel?.();
             }
         } catch (error) {

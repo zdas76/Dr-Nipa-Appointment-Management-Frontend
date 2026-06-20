@@ -59,7 +59,7 @@ export default function AssistantManagement() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {data?.data?.map((row, index: number) => (
+              {data?.data?.map((row: TAssistant, index: number) => (
                 <TableRow
                   key={row.id}
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -89,7 +89,7 @@ export default function AssistantManagement() {
                       <Delete
                         color="error"
                         sx={{ cursor: "pointer" }}
-                        onClick={() => handleDelete(row.id)}
+                        onClick={() => handleDelete(row.id!)}
                       />
                     </Stack>
                   </TableCell>
