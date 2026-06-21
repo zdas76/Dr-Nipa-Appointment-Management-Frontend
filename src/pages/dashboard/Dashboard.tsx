@@ -19,7 +19,6 @@ import {
   PersonAdd,
   Message,
   Assessment,
-  Receipt,
   PeopleAlt,
 } from "@mui/icons-material";
 import { Link } from "react-router";
@@ -265,7 +264,7 @@ export default function Dashboard() {
           </Typography>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Gross Revenue */}
           <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors">
             <div className="p-3 bg-teal-50 text-teal-600 rounded-lg">
@@ -281,20 +280,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Connector Amount */}
-          <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors">
-            <div className="p-3 bg-purple-50 text-purple-600 rounded-lg">
-              <Receipt />
-            </div>
-            <div>
-              <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
-                Connector Commissions
-              </span>
-              <Typography className="text-lg font-bold text-slate-700 mt-0.5">
-                ৳{reportTotals.TotalConnectorAmount.toLocaleString()}
-              </Typography>
-            </div>
-          </div>
 
           {/* Total Discount */}
           <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors">
@@ -318,7 +303,7 @@ export default function Dashboard() {
             </div>
             <div>
               <span className="text-xs text-indigo-600/80 font-bold uppercase tracking-wider">
-                Net Earnings
+                Net visiting fee
               </span>
               <Typography className="text-lg font-extrabold text-indigo-900 mt-0.5">
                 ৳{reportTotals.TotalAmount.toLocaleString()}

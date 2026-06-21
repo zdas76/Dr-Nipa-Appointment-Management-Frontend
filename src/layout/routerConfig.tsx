@@ -98,6 +98,7 @@ export const dashboardRoutes: RouteConfig[] = [
     roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
     element: <AppointmentList />,
   },
+
   {
     path: "send-sms",
     title: "Send SMS",

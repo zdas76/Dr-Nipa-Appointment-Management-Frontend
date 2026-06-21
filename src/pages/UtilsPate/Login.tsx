@@ -78,11 +78,11 @@ export default function Login() {
   };
 
   return (
-    <Box className="h-screen flex items-center justify-center bg-linear-to-tr from-sky-400 to-sky-100">
+    <Box className="h-screen flex items-center justify-center bg-linear-to-tr from-blue-500 to-sky-300">
       <Paper elevation={12} variant="elevation" className="rounded-2xl">
         <Container
           component="main"
-          className="border-4 md:border-8 bg-slate-100 border-sky-50 w-[350px] md:w-[500px] pt-4"
+          className="bg-white w-[350px] md:w-[500px] pt-4"
           sx={{
             borderBottomLeftRadius: "3rem",
             borderBottomRightRadius: "3rem",
@@ -93,12 +93,12 @@ export default function Login() {
             variant="h5"
           >
 
-            <Typography className="uppercase font-bold text-sky-500 md:text-2xl text-lg text-center">
+            <Typography className="uppercase font-bold text-pink-700 md:text-2xl text-lg text-center">
               Dr. Nahida Islam Nipa's
             </Typography>
             <Typography className="uppercase font-bold text-purple-700 md:text-xl text-lg text-center mb-3">Chamber</Typography>
-            <Typography className="uppercase font-bold text-slate-400 md:text-xl text-sm text-center">
-              Dermatology & Skin Care
+            <Typography className="uppercase font-bold text-blue-500 md:text-xl text-sm text-center">
+              Dermatologist, Venereologist & Dermatosurgeon
             </Typography>
           </Typography>
 

@@ -15,7 +15,6 @@ import {
 import { Controller, useForm, useWatch } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { z } from "zod";
-
 import { getResponse } from "../../utils/getResponst";
 import { toast } from "sonner";
 import { useEffect } from "react";
@@ -25,6 +24,7 @@ import dayjs from "dayjs";
 import { useGetAllConnectorQuery } from "../../redux/api/connectorAPI";
 import type { TConnector } from "../../types/User";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useGetPatientByIdQuery } from "../../redux/api/patientAPI";
 
 const schema = z.object({
     patientId: z.number({ message: "Patient ID is required" }).min(1),
@@ -59,6 +59,9 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
 
     const [updateAppointment, { isLoading }] = useUpdateAppointmentMutation();
 
+    const { data: patientData } = useGetPatientByIdQuery(data?.patientId as number, { skip: !data?.patientId, refetchOnMountOrArgChange: true });
+    const patientInfo = patientData?.data;
+
     const {
         register,
         handleSubmit,
@@ -73,14 +76,14 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
             visitingDate: data?.visitingDate || "",
             patientType: data?.patientType || "NEW",
             visitingTime: data?.visitingTime || "",
-            weight: data?.weight || null,
+            weight: data?.weight || 0,
             booldPusher: data?.booldPusher || "",
             visitingFee: data?.visitingFee,
-            discount: data?.discount,
+            discount: data?.discount || 0,
             bloodGroup: data?.bloodGroup || "",
             connectorFee: data?.connectorFee,
             paymentStatus: data?.paymentStatus || "UNPAID",
-            connectorId: data?.connectorId || null,
+            connectorId: data?.connectorId || undefined,
         }
     });
 
@@ -97,17 +100,17 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
 
             reset({
                 patientId: data.patientId,
-                connectorId: data.connectorId || null,
+                connectorId: data.connectorId || undefined,
                 visitingDate: formattedDate,
                 patientType: data.patientType,
                 visitingTime: data.visitingTime || "",
-                weight: data.weight || null,
+                weight: data.weight || undefined,
                 booldPusher: data.booldPusher || "",
-                visitingFee: data.visitingFee || null,
-                discount: data.discount || null,
+                visitingFee: data.visitingFee || undefined,
+                discount: data.discount || undefined,
                 bloodGroup: data.bloodGroup || "",
                 paymentStatus: data.paymentStatus ?? "UNPAID",
-                connectorFee: data.connectorFee || null,
+                connectorFee: data.connectorFee || undefined,
             });
         }
     }, [data, reset]);
@@ -124,7 +127,7 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
     // Fetch last appointment date for patient
 
     useEffect(() => {
-        const lastApptDateStr = data?.visitingDate;
+        const lastApptDateStr = patientInfo?.appointments[0]?.visitingDate;
 
         if (lastApptDateStr && vDate && doctorinfo) {
             const lastDate = dayjs(lastApptDateStr);
@@ -134,7 +137,7 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
             const isExceeded =
                 visitingDate.isAfter(expirationDate);
 
-            if (isExceeded || lastApptDateStr === data?.visitingDate) {
+            if (isExceeded === true || lastApptDateStr !== data?.visitingDate) {
                 setValue("patientType", "NEW");
             } else {
                 setValue("patientType", "OLD");
@@ -142,7 +145,7 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
         } else {
             setValue("patientType", "NEW");
         }
-    }, [vDate, doctorinfo, data?.visitingDate, setValue]);
+    }, [doctorinfo, vDate, patientInfo, setValue, data?.visitingDate]);
 
     useEffect(() => {
         if (patientType === "NEW") {
@@ -191,7 +194,7 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
                             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "#3b82f6", mb: 2, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                                 Appointment Information
                             </Typography>
-                            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr " }, gap: 3 }}>
+                            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
 
                                 <TextField
                                     fullWidth
@@ -320,7 +323,7 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
                                             loading={isConnectorsLoading}
                                             value={connectors?.data?.find((c: TConnector) => c.id === value) || null}
                                             onChange={(_, newValue) => {
-                                                onChange(newValue ? newValue.id : null);
+                                                onChange(newValue ? newValue.id : undefined);
                                             }}
                                             renderInput={(params) => (
                                                 <TextField

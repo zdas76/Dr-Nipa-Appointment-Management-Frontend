@@ -29,7 +29,7 @@ export type TPatient = {
   id?: number;
   patientId: number,
   name: string;
-  age: number;
+  age: string;
   sex: "MALE" | "FEMALE" | "OTHER";
   contactNumber: string;
   address: string;
@@ -63,12 +63,11 @@ export type TAppointment = {
   bloodGroup?: string | null;
   discount?: number | null;
   paymentStatus?: "PAID" | "UNPAID" | "PARTIALLY_PAID";
-  patient?: TPatient;
-  connector?: TConnector;
   patientInfo?: {
     name: string;
     contactNumber: string;
     sex: "MALE" | "FEMALE" | "OTHER";
+    age: string
   };
   connectorInfo?: {
     name: string;

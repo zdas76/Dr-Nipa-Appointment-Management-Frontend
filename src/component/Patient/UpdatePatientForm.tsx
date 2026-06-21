@@ -21,7 +21,7 @@ import type { TPatient } from "../../types/User";
 
 const schema = z.object({
     name: z.string().min(3, "Name must be at least 3 characters"),
-    age: z.number({ message: "Age must be a number" }).min(1, "Age must be a positive number"),
+    age: z.string({ message: "Age is required!" }).min(1, "Age is required!"),
     sex: z.enum(["MALE", "FEMALE", "OTHER"]),
     contactNumber: z.string().min(11, "Invalid contact number"),
     address: z.string().min(1, "Address is required"),
@@ -87,9 +87,8 @@ export default function UpdatePatientForm({ data, onCancel }: UpdatePatientFormP
                             <TextField
                                 fullWidth
                                 label="Age"
-                                type="number"
                                 variant="outlined"
-                                {...register("age", { valueAsNumber: true })}
+                                {...register("age")}
                                 error={!!errors.age}
                                 helperText={errors.age?.message}
                             />

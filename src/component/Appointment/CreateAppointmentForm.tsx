@@ -29,20 +29,20 @@ import { SearchOffSharp } from "@mui/icons-material";
 
 const schema = z.object({
     name: z.string().min(1, "Name is required"),
-    age: z.number({ message: "Age is required" }).min(1),
+    age: z.string().min(1, "Age is required"),
     sex: z.enum(["MALE", "FEMALE", "OTHER"]),
-    contactNumber: z.string().min(1, "Contact number is required"),
+    contactNumber: z.string().min(11, "Contact number is required"),
     address: z.string().min(1, "Address is required"),
-    patientId: z.number().optional().nullable(),
+    patientId: z.number().optional(),
     visitingDate: z.string().min(1, "Visiting date is required"),
     patientType: z.enum(["NEW", "OLD"]),
     visitingTime: z.string().optional(),
-    connectorId: z.number().optional().nullable(),
-    visitingFee: z.number().optional().nullable(),
-    weight: z.number().optional().nullable(),
-    booldPusher: z.string().optional().nullable(),
-    bloodGroup: z.string().optional().nullable(),
-    discount: z.number().optional().nullable(),
+    connectorId: z.number().optional(),
+    visitingFee: z.number().optional(),
+    weight: z.number().optional(),
+    booldPusher: z.string().optional(),
+    bloodGroup: z.string().optional(),
+    discount: z.number().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -56,6 +56,9 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
     const [defaultPatientId, setDefaultPatientId] = useState<number | null>(null);
     const [searchPatient, setSearchPatient] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [ageValue, setAgeValue] = useState("");
+    const [ageUnit, setAgeUnit] = useState("YEARS");
+
     const [patientId, setPatientId] = useState<number | null>(null);
     const { data: patients, isLoading: isPatientsLoading } = useGetAllPatientSearchQuery(debouncedSearch, { skip: !debouncedSearch });
     const { data: connectors, isLoading: isConnectorsLoading } = useGetAllConnectorQuery(undefined);
@@ -77,11 +80,11 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
             patientType: "NEW",
             visitingTime: dayjs().hour(16).minute(0).format("HH:mm"),
             name: "",
-            age: 0,
+            age: "",
             sex: "MALE",
             contactNumber: "",
             address: "",
-            patientId: null,
+            patientId: undefined,
         }
     });
 
@@ -101,18 +104,28 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
     useEffect(() => {
         if (patientInfo) {
             setValue("name", patientInfo?.name);
-            setValue("age", patientInfo?.age);
+            if (patientInfo?.age) {
+                const ageParts = patientInfo.age.trim().split(" ");
+                if (ageParts.length >= 2) {
+                    const value = ageParts[0];
+                    const unit = ageParts.slice(1).join(" ");
+                    // eslint-disable-next-line
+                    setAgeValue(value);
+                    // eslint-disable-next-line
+                    setAgeUnit(unit);
+                    setValue("age", `${value} ${unit}`);
+                }
+            }
             setValue("sex", patientInfo?.sex);
             setValue("contactNumber", patientInfo?.contactNumber);
             setValue("address", patientInfo?.address);
             setValue("patientId", patientInfo?.patientId);
-
         } else {
             setValue("name", "");
-            setValue("age", 0);
+            setValue("age", "");
             setValue("sex", "MALE");
             setValue("address", "");
-            setValue("patientId", null);
+            setValue("patientId", undefined);
         }
 
     }, [contactNumber, patientInfo, setValue]);
@@ -159,9 +172,10 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
 
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
+        const age = ageValue + " " + ageUnit;
 
         try {
-            const res = await createAppointment(data).unwrap();
+            const res = await createAppointment({ ...data, age }).unwrap();
             const result = getResponse(res);
             if (result.success) {
                 toast.success(result.message);
@@ -258,16 +272,7 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
                                 error={!!errors.name}
                                 helperText={errors.name?.message}
                             />
-                            <TextField
-                                fullWidth
-                                label="Age"
-                                type="number"
-                                focused
-                                variant="outlined"
-                                {...register("age", { valueAsNumber: true })}
-                                error={!!errors.age}
-                                helperText={errors.age?.message}
-                            />
+
                             <FormControl fullWidth error={!!errors.sex}>
                                 <InputLabel>Sex</InputLabel>
                                 <Controller
@@ -282,6 +287,27 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
                                     )}
                                 />
                             </FormControl>
+
+                            <Box className="flex items-center gap-2">
+                                <TextField
+                                    fullWidth
+                                    label="Age"
+                                    focused
+                                    defaultValue={ageValue}
+                                    variant="outlined"
+                                    onChange={(e) => {
+                                        setAgeValue(e.target.value);
+                                        setValue("age", `${e.target.value} ${ageUnit}`);
+                                    }}
+                                    error={!!errors.age}
+                                    helperText={errors.age?.message}
+                                />
+                                <Select label="Age Unit" defaultValue={ageUnit} onChange={(e) => setAgeUnit(e.target.value as string)}>
+                                    <MenuItem value="YEARS">Years</MenuItem>
+                                    <MenuItem value="MONTHS">Months</MenuItem>
+                                    <MenuItem value="DAYS">Days</MenuItem>
+                                </Select>
+                            </Box>
 
                             <TextField
                                 fullWidth

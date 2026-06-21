@@ -29,8 +29,7 @@ import type { TAppointment } from "../../../types/User";
 import { toast } from "sonner";
 import UpdateModal from "../../../component/Modal/UpdateModal";
 import UpdateAppointmentForm from "../../../component/Appointment/UpdateAppointmentForm";
-import PrintPage from "../../../component/Appointment/PrintPage";
-import PrintModal from "../../../component/Modal/PrintModal";
+
 
 
 type Status = "BOOKED" | "PRESENT" | "ABSENT" | "VISITED";
@@ -48,7 +47,32 @@ export default function AppointmentList() {
     const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
     const [activeTab, setActiveTab] = useState<string>("BOOKED");
     const [editModalOpen, setEditModalOpen] = useState(false);
-    const [printModalOpen, setPrintModalOpen] = useState(false);
+
+    const formatTime12h = (time: string): string => {
+        if (!time) return "";
+        const [hourStr, minuteStr] = time.split(":");
+        let hour = parseInt(hourStr, 10);
+        const minute = minuteStr?.slice(0, 2) ?? "00";
+        const ampm = hour >= 12 ? "PM" : "AM";
+        hour = hour % 12 || 12;
+        return `${hour}:${minute} ${ampm}`;
+    };
+
+    const handlePrint = (row: TAppointment) => {
+        const params = new URLSearchParams({
+            patientId: row.patientId?.toString() ?? "",
+            patientName: row.patientInfo?.name ?? "",
+            gender: row.patientInfo?.sex ?? "",
+            age: row.patientInfo?.age?.toString() ?? "",
+            patientType: row.patientType ?? "",
+            visitingFee: String(row.visitingFee ?? ""),
+            contactNumber: row.patientInfo?.contactNumber ?? "",
+            visitingDate: new Date(row.visitingDate).toDateString().split('T')[0] ?? "",
+            visitingTime: formatTime12h(row.visitingTime ?? ""),
+        });
+        window.open(`/print-page?${params.toString()}`, "_blank");
+    };
+
 
     // Per-row menu state
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -183,6 +207,7 @@ export default function AppointmentList() {
                                             <TableCell sx={{ fontWeight: 700 }}>Patient Name</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Contact</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Gender</TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>Age</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Visiting Time</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
@@ -213,6 +238,7 @@ export default function AppointmentList() {
                                                         </TableCell>
                                                         <TableCell>{row.patientInfo?.contactNumber ?? "—"}</TableCell>
                                                         <TableCell>{row.patientInfo?.sex ?? "—"}</TableCell>
+                                                        <TableCell>{row.patientInfo?.age ?? "—"}</TableCell>
                                                         <TableCell>{row.visitingTime ?? "N/A"}</TableCell>
                                                         <TableCell>{row.patientType}</TableCell>
                                                         <TableCell>
@@ -250,7 +276,7 @@ export default function AppointmentList() {
 
                                                             {status === "PRESENT" && <Edit color="primary" sx={{ cursor: "pointer", ml: 1 }} onClick={() => setEditModalOpen(true)} />}
 
-                                                            {(status === "PRESENT" || status === "VISITED") && row.paymentStatus === "PAID" && <Print color="secondary" sx={{ cursor: "pointer", ml: 1 }} onClick={() => setPrintModalOpen(true)} />}
+                                                            {(status === "PRESENT" || status === "VISITED") && row.paymentStatus === "PAID" && <Print color="secondary" sx={{ cursor: "pointer", ml: 1 }} onClick={() => handlePrint(row)} />}
 
                                                             <UpdateModal
                                                                 open={editModalOpen}
@@ -262,7 +288,8 @@ export default function AppointmentList() {
                                                                 />
                                                             </UpdateModal>
 
-                                                            <PrintModal
+
+                                                            {/* <PrintModal
                                                                 open={printModalOpen}
                                                                 handleClose={() => setPrintModalOpen(false)}
                                                             >
@@ -270,7 +297,7 @@ export default function AppointmentList() {
                                                                     appointmentData={row as TAppointment}
                                                                     onCancel={() => setPrintModalOpen(false)}
                                                                 />
-                                                            </PrintModal>
+                                                            </PrintModal> */}
 
                                                         </TableCell>
                                                     </TableRow>

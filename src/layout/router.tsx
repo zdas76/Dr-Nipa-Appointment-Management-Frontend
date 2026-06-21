@@ -8,6 +8,7 @@ import { dashboardRoutes, type RouteConfig } from "./routerConfig";
 import ChangePassword from "../pages/Profile/ChangePassword";
 import Profile from "../pages/Profile/Profile";
 import ProfileLayout from "./ProfileLayout";
+import PrintPage from "../pages/dashboard/Appoint/PrintPage";
 
 const generateRoutes = (routes: RouteConfig[]): any[] => {
   let generated: any[] = [];
@@ -53,6 +54,12 @@ export const routes = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/print-page",
+    element: (
+      <PrintPage />
+    ),
   },
   {
     path: "/profile",

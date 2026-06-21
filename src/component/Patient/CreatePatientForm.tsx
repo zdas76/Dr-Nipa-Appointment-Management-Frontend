@@ -17,13 +17,14 @@ import { z } from "zod";
 import { usePatientRegistrationMutation } from "../../redux/api/patientAPI";
 import { getResponse } from "../../utils/getResponst";
 import { toast } from "sonner";
+import { useState } from "react";
 
 const schema = z.object({
     name: z.string().min(3, "Name must be at least 3 characters"),
-    age: z.number({ message: "Age must be a number" }).min(1, "Age must be a positive number"),
+    age: z.string().min(1, "Age is required!"),
     sex: z.enum(["MALE", "FEMALE", "OTHER"]),
     contactNumber: z.string().min(11, "Invalid contact number"),
-    address: z.string().min(1, "Address is required"),
+    address: z.string().min(1, "Address is required!"),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -33,11 +34,18 @@ interface CreatePatientFormProps {
 }
 
 export default function CreatePatientForm({ onCancel }: CreatePatientFormProps) {
+
+    const [ageValue, setAgeValue] = useState("");
+    const [ageUnit, setAgeUnit] = useState("Years");
+
+    const valueOptions = ["Days", "Months", "Years"];
+
     const [submitPatient, { isLoading }] = usePatientRegistrationMutation();
     const {
         register,
         handleSubmit,
         control,
+        setValue,
         reset,
         formState: { errors },
     } = useForm<FormData>({
@@ -48,6 +56,10 @@ export default function CreatePatientForm({ onCancel }: CreatePatientFormProps) 
     });
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
+
+        const age = ageValue + " " + ageUnit;
+        data.age = age;
+
         const res = await submitPatient(data).unwrap();
         const result = getResponse(res);
         if (result.success) {
@@ -68,10 +80,8 @@ export default function CreatePatientForm({ onCancel }: CreatePatientFormProps) 
             <form onSubmit={handleSubmit(onSubmit)}>
                 <Stack spacing={4}>
                     <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "#3b82f6", mb: 2, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                            Patient Information
-                        </Typography>
-                        <Box className="grid gap-4 grid-cols-1 lg:grid-cols-1">
+
+                        <Box className="gap-4 flex flex-col ">
                             <TextField
                                 fullWidth
                                 label="Full Name"
@@ -80,15 +90,29 @@ export default function CreatePatientForm({ onCancel }: CreatePatientFormProps) 
                                 error={!!errors.name}
                                 helperText={errors.name?.message}
                             />
-                            <TextField
-                                fullWidth
-                                label="Age"
-                                type="number"
-                                variant="outlined"
-                                {...register("age", { valueAsNumber: true })}
-                                error={!!errors.age}
-                                helperText={errors.age?.message}
-                            />
+
+                            <Box className="flex items-center gap-2">
+                                <TextField
+                                    fullWidth
+                                    label="Age"
+                                    focused
+                                    variant="outlined"
+                                    onChange={(e) => {
+                                        setAgeValue(e.target.value);
+                                        setValue("age", e.target.value); // keep RHF in sync for Zod validation
+                                    }}
+                                    error={!!errors.age}
+                                    helperText={errors.age?.message}
+                                />
+                                <Select label="Age Unit" defaultValue="Years" onChange={(e) => setAgeUnit(e.target.value as string)}>
+                                    {valueOptions.map((unit) => (
+                                        <MenuItem key={unit} value={unit}>
+                                            {unit}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </Box>
+
                             <FormControl fullWidth error={!!errors.sex}>
                                 <InputLabel>Sex</InputLabel>
                                 <Controller
@@ -103,6 +127,7 @@ export default function CreatePatientForm({ onCancel }: CreatePatientFormProps) 
                                     )}
                                 />
                             </FormControl>
+
                             <TextField
                                 fullWidth
                                 label="Contact Number"
@@ -111,6 +136,7 @@ export default function CreatePatientForm({ onCancel }: CreatePatientFormProps) 
                                 error={!!errors.contactNumber}
                                 helperText={errors.contactNumber?.message}
                             />
+
                             <TextField
                                 fullWidth
                                 label="Address"
@@ -152,6 +178,6 @@ export default function CreatePatientForm({ onCancel }: CreatePatientFormProps) 
                     </Box>
                 </Stack>
             </form>
-        </Paper>
+        </Paper >
     );
 }
