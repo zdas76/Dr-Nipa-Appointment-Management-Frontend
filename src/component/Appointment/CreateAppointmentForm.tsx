@@ -18,7 +18,7 @@ import type { SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { useGetAllPatientSearchQuery, useGetPatientByIdQuery } from "../../redux/api/patientAPI";
 import { useGetAllConnectorQuery } from "../../redux/api/connectorAPI";
-import { useCreateAppointmentMutation } from "../../redux/api/appointment";
+import { useCreateAppointmentMutation, useGetLastVisitingDateQuery } from "../../redux/api/appointment";
 import type { TConnector, TPatient } from "../../types/User";
 import { getResponse } from "../../utils/getResponst";
 import { toast } from "sonner";
@@ -65,6 +65,12 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
     const { data: doctors, isLoading: isDoctorLoading } = useGetDoctorInforQuery([]);
     const [createAppointment, { isLoading }] = useCreateAppointmentMutation();
 
+    const { data: patientData } = useGetPatientByIdQuery(patientId as number, { skip: !patientId, refetchOnMountOrArgChange: true });
+    const patientInfo = patientData?.data;
+
+    const { data: lastVisitingDateInfo, isLoading: isLastVisitingDateLoading } = useGetLastVisitingDateQuery(patientId as number, { skip: !patientId, refetchOnMountOrArgChange: true });
+    const lastVisitingDate = lastVisitingDateInfo?.data;
+
     const doctorinfo = doctors?.data[0];
 
     const {
@@ -98,9 +104,6 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
         name: "contactNumber",
     });
 
-    const { data: patientData } = useGetPatientByIdQuery(patientId as number, { skip: !patientId, refetchOnMountOrArgChange: true });
-    const patientInfo = patientData?.data;
-
     useEffect(() => {
         if (patientInfo) {
             setValue("name", patientInfo?.name);
@@ -111,7 +114,6 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
                     const unit = ageParts.slice(1).join(" ");
                     // eslint-disable-next-line
                     setAgeValue(value);
-                    // eslint-disable-next-line
                     setAgeUnit(unit);
                     setValue("age", `${value} ${unit}`);
                 }
@@ -127,33 +129,26 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
             setValue("address", "");
             setValue("patientId", undefined);
         }
-
     }, [contactNumber, patientInfo, setValue]);
 
-
     useEffect(() => {
+        if (lastVisitingDate && vDate) {
+            const expirationDate = dayjs(lastVisitingDate).add(3, "month");
 
-        if (patientInfo && vDate) {
-            const lastDate = dayjs(patientInfo?.appointments[0]?.visitingDate || "");
-            const expirationDate = dayjs(lastDate).add(3, "month");
-            const visitingDate = dayjs(vDate);
+            const isAfter = dayjs(vDate).isAfter(expirationDate);
 
-            const isExceeded =
-                visitingDate.isAfter(expirationDate);
-
-            if (isExceeded) {
+            if (isAfter) {
                 setValue("patientType", "NEW");
                 setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
             } else {
                 setValue("patientType", "OLD");
                 setValue("visitingFee", doctorinfo?.oldPatientVisitingFee);
-
             }
         } else {
             setValue("patientType", "NEW");
             setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
         }
-    }, [patientInfo, vDate, setValue, doctorinfo]);
+    }, [lastVisitingDate, vDate, setValue, doctorinfo]);
 
     useEffect(() => {
         const timerId = setTimeout(() => {
@@ -162,7 +157,6 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
             } else {
                 setDebouncedSearch("");
             }
-
         }, 500);
 
         return () => {
@@ -189,7 +183,7 @@ export default function CreateAppointmentForm({ onCancel }: CreateAppointmentFor
         }
     };
 
-    if (isDoctorLoading) {
+    if (isDoctorLoading || isLastVisitingDateLoading) {
         return <CircularProgress color="primary" />;
     }
 

@@ -15,11 +15,9 @@ import { toast } from "sonner";
 
 const schema = z.object({
     name: z.string().min(3, "Name must be at least 3 characters"),
-    contactNumber: z.string().min(11, "Invalid contact number"),
+    contactNumber: z.string().min(11, "Invalid contact number").max(11, "Invalid contact number").regex(/^\d+$/, "Invalid contact number"),
     email: z.string().email("Invalid email address").optional().or(z.literal("")),
     diagnosticName: z.string().optional(),
-    newPatientAmount: z.number({ message: "Must be a number" }).min(0, "Amount must be positive"),
-    oldPatientAmount: z.number({ message: "Must be a number" }).min(0, "Amount must be positive"),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -37,10 +35,6 @@ export default function CreateConnectorForm({ onCancel }: CreateConnectorFormPro
         formState: { errors },
     } = useForm<FormData>({
         resolver: zodResolver(schema),
-        defaultValues: {
-            newPatientAmount: 0,
-            oldPatientAmount: 0,
-        }
     });
 
     const onSubmit = async (data: FormData) => {
@@ -100,24 +94,6 @@ export default function CreateConnectorForm({ onCancel }: CreateConnectorFormPro
                                 {...register("diagnosticName")}
                                 error={!!errors.diagnosticName}
                                 helperText={errors.diagnosticName?.message}
-                            />
-                            <TextField
-                                fullWidth
-                                label="New Patient Amount"
-                                type="number"
-                                variant="outlined"
-                                {...register("newPatientAmount", { valueAsNumber: true })}
-                                error={!!errors.newPatientAmount}
-                                helperText={errors.newPatientAmount?.message}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Old Patient Amount"
-                                type="number"
-                                variant="outlined"
-                                {...register("oldPatientAmount", { valueAsNumber: true })}
-                                error={!!errors.oldPatientAmount}
-                                helperText={errors.oldPatientAmount?.message}
                             />
                         </Box>
                     </Box>

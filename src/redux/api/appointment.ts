@@ -61,6 +61,15 @@ const appointmentApi = baseApi.injectEndpoints({
             },
             invalidatesTags: ["appointment"],
         }),
+        getLastVisitingDate: builder.query({
+            query: (patientId: number) => {
+                return {
+                    url: `/appointment/last-visiting-date/${patientId}`,
+                    method: "GET",
+                };
+            },
+            providesTags: ["appointment"],
+        }),
     }),
 });
 
@@ -71,4 +80,5 @@ export const {
     useUpdateAppointmentMutation,
     useUpdateAppointmentStatusMutation,
     useDeleteAppointmentMutation,
+    useGetLastVisitingDateQuery,
 } = appointmentApi;

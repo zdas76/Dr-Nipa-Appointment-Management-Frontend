@@ -1,4 +1,4 @@
-import { useUpdateAppointmentMutation, useGetAppointmentByIdQuery } from "../../redux/api/appointment";
+import { useUpdateAppointmentMutation, useGetAppointmentByIdQuery, useGetLastVisitingDateQuery } from "../../redux/api/appointment";
 import {
     Autocomplete,
     Box,
@@ -24,21 +24,19 @@ import dayjs from "dayjs";
 import { useGetAllConnectorQuery } from "../../redux/api/connectorAPI";
 import type { TConnector } from "../../types/User";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useGetPatientByIdQuery } from "../../redux/api/patientAPI";
 
 const schema = z.object({
     patientId: z.number({ message: "Patient ID is required" }).min(1),
     visitingDate: z.string().min(1, "Visiting date is required"),
     patientType: z.enum(["NEW", "OLD"]),
     visitingTime: z.string().optional(),
-    weight: z.number().optional().nullable(),
-    booldPusher: z.string().optional().nullable(),
-    visitingFee: z.number().optional().nullable(),
-    discount: z.number().optional().nullable(),
-    bloodGroup: z.string().optional().nullable(),
+    weight: z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : Number(val)), z.number().optional()),
+    booldPusher: z.string().optional(),
+    visitingFee: z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : Number(val)), z.number().optional()),
+    discount: z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : Number(val)), z.number().optional()),
+    bloodGroup: z.string().optional(),
     paymentStatus: z.enum(["PAID", "UNPAID", "PARTIALLY_PAID"]),
-    connectorFee: z.number().optional().nullable(),
-    connectorId: z.number().optional().nullable(),
+    connectorId: z.number().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -49,18 +47,21 @@ interface UpdateAppointmentFormProps {
 }
 
 export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmentFormProps) {
+
     const { data: appData, isLoading: appIsLoading } = useGetAppointmentByIdQuery(id);
     const data = appData?.data;
 
     const { data: doctors, isLoading: isDoctorLoading } = useGetDoctorInforQuery([]);
     const doctorinfo = doctors?.data[0];
 
-    const { data: connectors, isLoading: isConnectorsLoading } = useGetAllConnectorQuery(undefined);
+    const { data: connectors, isLoading: isConnectorsLoading } = useGetAllConnectorQuery({});
 
     const [updateAppointment, { isLoading }] = useUpdateAppointmentMutation();
 
-    const { data: patientData } = useGetPatientByIdQuery(data?.patientId as number, { skip: !data?.patientId, refetchOnMountOrArgChange: true });
-    const patientInfo = patientData?.data;
+    const { data: lastVisitingDateInfo, isLoading: isLastVisitingDateLoading } = useGetLastVisitingDateQuery(data?.patientId as number, { skip: !data?.patientId, refetchOnMountOrArgChange: true });
+    const lastVisitingDate = lastVisitingDateInfo?.data;
+
+
 
     const {
         register,
@@ -69,23 +70,21 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
         setValue,
         reset,
         formState: { errors },
-    } = useForm<FormData>({
+    } = useForm<z.input<typeof schema>, FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
             patientId: data?.patientId || 0,
             visitingDate: data?.visitingDate || "",
             patientType: data?.patientType || "NEW",
             visitingTime: data?.visitingTime || "",
-            weight: data?.weight || 0,
             booldPusher: data?.booldPusher || "",
             visitingFee: data?.visitingFee,
-            discount: data?.discount || 0,
             bloodGroup: data?.bloodGroup || "",
-            connectorFee: data?.connectorFee,
             paymentStatus: data?.paymentStatus || "UNPAID",
             connectorId: data?.connectorId || undefined,
         }
     });
+
 
     useEffect(() => {
         if (data) {
@@ -110,7 +109,6 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
                 discount: data.discount || undefined,
                 bloodGroup: data.bloodGroup || "",
                 paymentStatus: data.paymentStatus ?? "UNPAID",
-                connectorFee: data.connectorFee || undefined,
             });
         }
     }, [data, reset]);
@@ -120,43 +118,24 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
         name: "visitingDate",
     });
 
-    const patientType = useWatch({
-        control,
-        name: "patientType",
-    });
     // Fetch last appointment date for patient
 
+
     useEffect(() => {
-        const lastApptDateStr = patientInfo?.appointments[0]?.visitingDate;
+        if (vDate && lastVisitingDate) {
+            const expirationDate = dayjs(lastVisitingDate).add(3, "month");
+            const isAfter = dayjs(vDate).isAfter(expirationDate);
 
-        if (lastApptDateStr && vDate && doctorinfo) {
-            const lastDate = dayjs(lastApptDateStr);
-            const expirationDate = dayjs(lastDate).add(3, "month");
-            const visitingDate = dayjs(vDate);
-
-            const isExceeded =
-                visitingDate.isAfter(expirationDate);
-
-            if (isExceeded === true || lastApptDateStr !== data?.visitingDate) {
-                setValue("patientType", "NEW");
-            } else {
+            if (!isAfter) {
                 setValue("patientType", "OLD");
+                setValue("visitingFee", doctorinfo?.oldPatientVisitingFee);
+            } else {
+                setValue("patientType", "NEW");
+                setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
             }
-        } else {
-            setValue("patientType", "NEW");
         }
-    }, [doctorinfo, vDate, patientInfo, setValue, data?.visitingDate]);
 
-    useEffect(() => {
-        if (patientType === "NEW") {
-            setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
-            setValue("connectorFee", data?.connectorInfo?.newPatientAmount);
-        } else {
-            setValue("visitingFee", doctorinfo?.oldPatientVisitingFee);
-            setValue("connectorFee", data?.connectorInfo?.oldPatientAmount);
-        }
-    }, [patientType, doctorinfo, data, setValue]);
-
+    }, [lastVisitingDate, vDate, setValue, doctorinfo]);
 
     const onSubmit: SubmitHandler<FormData> = async (formData) => {
 
@@ -176,8 +155,12 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
         }
     };
 
-    if (isDoctorLoading) {
-        return <FrontLoader />
+    if (appIsLoading || isDoctorLoading || isConnectorsLoading || isLastVisitingDateLoading) {
+        return (
+            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+                <FrontLoader />
+            </Box>
+        );
     }
     return (
         <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
@@ -247,9 +230,8 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
                                 <TextField
                                     fullWidth
                                     label="Weight (kg)"
-                                    type="number"
                                     variant="outlined"
-                                    {...register("weight", { valueAsNumber: true })}
+                                    {...register("weight")}
                                     error={!!errors.weight}
                                     helperText={errors.weight?.message}
                                 />
@@ -274,9 +256,8 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
                                 <TextField
                                     fullWidth
                                     label="Discount"
-                                    type="number"
                                     variant="outlined"
-                                    {...register("discount", { valueAsNumber: true })}
+                                    {...register("discount")}
                                     error={!!errors.discount}
                                     helperText={errors.discount?.message}
                                 />

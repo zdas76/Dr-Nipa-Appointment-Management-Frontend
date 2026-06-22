@@ -30,8 +30,6 @@ import { toast } from "sonner";
 import UpdateModal from "../../../component/Modal/UpdateModal";
 import UpdateAppointmentForm from "../../../component/Appointment/UpdateAppointmentForm";
 
-
-
 type Status = "BOOKED" | "PRESENT" | "ABSENT" | "VISITED";
 
 const STATUS_CONFIG: Record<Status, { label: string; color: "warning" | "success" | "error" | "primary" }> = {
@@ -47,6 +45,8 @@ export default function AppointmentList() {
     const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
     const [activeTab, setActiveTab] = useState<string>("BOOKED");
     const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editAppointmentId, setEditAppointmentId] = useState<number | null>(null);
+    const [searchText, setSearchText] = useState("");
 
     const formatTime12h = (time: string): string => {
         if (!time) return "";
@@ -73,7 +73,6 @@ export default function AppointmentList() {
         window.open(`/print-page?${params.toString()}`, "_blank");
     };
 
-
     // Per-row menu state
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const [menuAppointmentId, setMenuAppointmentId] = useState<number | null>(null);
@@ -85,12 +84,25 @@ export default function AppointmentList() {
     const [updateStatus, { isLoading: isUpdating }] = useUpdateAppointmentStatusMutation();
 
     const allData: TAppointment[] = appointments?.data ?? [];
+    const filteredAppointments =
+        allData.filter((item) => {
+            const searchTerm = searchText.toLowerCase();
+            const patientName = (item.patientInfo?.name || "").toLowerCase();
+            const patientContact = (item.patientInfo?.contactNumber || "").toLowerCase();
+            const patientId = (item.patientId?.toString() || "").toLowerCase();
+
+            return (
+                patientName.includes(searchTerm) ||
+                patientContact.includes(searchTerm) ||
+                patientId.includes(searchTerm)
+            );
+        });
 
     const counts: Record<Status, number> = {
-        BOOKED: allData.filter((i) => (i.status ?? "BOOKED") === "BOOKED").length,
-        PRESENT: allData.filter((i) => i.status === "PRESENT").length,
-        ABSENT: allData.filter((i) => i.status === "ABSENT").length,
-        VISITED: allData.filter((i) => i.status === "VISITED").length,
+        BOOKED: filteredAppointments.filter((i) => (i.status ?? "BOOKED") === "BOOKED").length,
+        PRESENT: filteredAppointments.filter((i) => i.status === "PRESENT").length,
+        ABSENT: filteredAppointments.filter((i) => i.status === "ABSENT").length,
+        VISITED: filteredAppointments.filter((i) => i.status === "VISITED").length,
     };
 
     const openMenu = (event: React.MouseEvent<HTMLElement>, id: number) => {
@@ -146,23 +158,37 @@ export default function AppointmentList() {
     return (
         <Box>
             {/* Date Selector */}
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    my: 2,
-                    gap: 2,
-                }}
-            >
-                <Typography sx={{ fontSize: 16, fontWeight: 500 }}>Select Date:</Typography>
-                <TextField
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    size="small"
-                />
+            <Box className="flex items-center justify-between gap-4 py-2 my-2 w-full">
+                <Box className="flex-1">
+                    <TextField
+                        placeholder="Search by name or phone number or Patient Id"
+                        size="small"
+                        type="text"
+                        fullWidth
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                    />
+                </Box>
+
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
+                        gap: 2,
+                    }}
+                >
+                    <Typography sx={{ fontSize: 16, fontWeight: 500 }}>Select Date:</Typography>
+                    <TextField
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        size="small"
+                    />
+                </Box>
+
+
             </Box>
 
             <TabContext value={activeTab}>
@@ -194,9 +220,12 @@ export default function AppointmentList() {
                     </TabList>
                 </Box>
 
+                <Box sx={{ mt: 2 }}>
+
+                </Box>
                 {/* Tab Panels with Table */}
                 {ALL_STATUSES.map((s) => {
-                    const filtered = allData.filter((item) => (item.status ?? "BOOKED") === s);
+                    const filtered = filteredAppointments.filter((item) => (item.status ?? "BOOKED") === s);
                     return (
                         <TabPanel key={s} value={s} sx={{ p: 0 }}>
                             <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 2 }}>
@@ -205,14 +234,15 @@ export default function AppointmentList() {
                                         <TableRow>
                                             <TableCell sx={{ fontWeight: 700 }}>SL</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Patient Name</TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>PatientId</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Contact</TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>Refferance By</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Gender</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Age</TableCell>
-                                            <TableCell sx={{ fontWeight: 700 }}>Visiting Time</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                                             <TableCell sx={{ fontWeight: 700 }}>Payment Status</TableCell>
-                                            <TableCell sx={{ fontWeight: 700 }} align="center">
+                                            <TableCell sx={{ fontWeight: 700 }} align="left">
                                                 Actions
                                             </TableCell>
                                         </TableRow>
@@ -236,10 +266,11 @@ export default function AppointmentList() {
                                                         <TableCell component="th" scope="row">
                                                             {row.patientInfo?.name ?? "—"}
                                                         </TableCell>
+                                                        <TableCell>{row.patientInfo?.patientId ?? "—"}</TableCell>
                                                         <TableCell>{row.patientInfo?.contactNumber ?? "—"}</TableCell>
+                                                        <TableCell>{row.connectorInfo?.name ? `${row.connectorInfo?.name} (${row.connectorInfo?.diagnosticName})` : "—"}</TableCell>
                                                         <TableCell>{row.patientInfo?.sex ?? "—"}</TableCell>
                                                         <TableCell>{row.patientInfo?.age ?? "—"}</TableCell>
-                                                        <TableCell>{row.visitingTime ?? "N/A"}</TableCell>
                                                         <TableCell>{row.patientType}</TableCell>
                                                         <TableCell>
                                                             <Chip
@@ -257,7 +288,7 @@ export default function AppointmentList() {
                                                                 sx={{ fontWeight: 700 }}
                                                             />
                                                         </TableCell>
-                                                        <TableCell align="center">
+                                                        <TableCell align="left">
                                                             <Button
                                                                 size="small"
                                                                 variant="outlined"
@@ -274,31 +305,18 @@ export default function AppointmentList() {
                                                                 Change
                                                             </Button>
 
-                                                            {status === "PRESENT" && <Edit color="primary" sx={{ cursor: "pointer", ml: 1 }} onClick={() => setEditModalOpen(true)} />}
+                                                            {status === "PRESENT" && (
+                                                                <Edit
+                                                                    color="primary"
+                                                                    sx={{ cursor: "pointer", ml: 1 }}
+                                                                    onClick={() => {
+                                                                        setEditAppointmentId(row.id as number);
+                                                                        setEditModalOpen(true);
+                                                                    }}
+                                                                />
+                                                            )}
 
                                                             {(status === "PRESENT" || status === "VISITED") && row.paymentStatus === "PAID" && <Print color="secondary" sx={{ cursor: "pointer", ml: 1 }} onClick={() => handlePrint(row)} />}
-
-                                                            <UpdateModal
-                                                                open={editModalOpen}
-                                                                handleClose={() => setEditModalOpen(false)}
-                                                            >
-                                                                <UpdateAppointmentForm
-                                                                    id={row.id as number}
-                                                                    onCancel={() => setEditModalOpen(false)}
-                                                                />
-                                                            </UpdateModal>
-
-
-                                                            {/* <PrintModal
-                                                                open={printModalOpen}
-                                                                handleClose={() => setPrintModalOpen(false)}
-                                                            >
-                                                                <PrintPage
-                                                                    appointmentData={row as TAppointment}
-                                                                    onCancel={() => setPrintModalOpen(false)}
-                                                                />
-                                                            </PrintModal> */}
-
                                                         </TableCell>
                                                     </TableRow>
                                                 );
@@ -311,6 +329,25 @@ export default function AppointmentList() {
                     );
                 })}
             </TabContext>
+
+            {/* Update Modal */}
+            <UpdateModal
+                open={editModalOpen}
+                handleClose={() => {
+                    setEditModalOpen(false);
+                    setEditAppointmentId(null);
+                }}
+            >
+                {editAppointmentId !== null && (
+                    <UpdateAppointmentForm
+                        id={editAppointmentId}
+                        onCancel={() => {
+                            setEditModalOpen(false);
+                            setEditAppointmentId(null);
+                        }}
+                    />
+                )}
+            </UpdateModal>
 
             {/* Status Change Dropdown Menu */}
 

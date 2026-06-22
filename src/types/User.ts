@@ -65,6 +65,7 @@ export type TAppointment = {
   paymentStatus?: "PAID" | "UNPAID" | "PARTIALLY_PAID";
   patientInfo?: {
     name: string;
+    patientId: number;
     contactNumber: string;
     sex: "MALE" | "FEMALE" | "OTHER";
     age: string
