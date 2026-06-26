@@ -67,7 +67,7 @@ export default function AppointmentList() {
             patientType: row.patientType ?? "",
             visitingFee: String(row.visitingFee ?? ""),
             contactNumber: row.patientInfo?.contactNumber ?? "",
-            visitingDate: new Date(row.visitingDate).toDateString().split('T')[0] ?? "",
+            visitingDate: new Date(row.visitingDate).toISOString().split("T")[0] ?? "",
             visitingTime: formatTime12h(row.visitingTime ?? ""),
         });
         window.open(`/print-page?${params.toString()}`, "_blank");

@@ -1,8 +1,10 @@
 import { useSearchParams } from "react-router";
 
 function formatDate(dateStr: string | null): string {
+    console.log("dateStr", dateStr)
     if (!dateStr) return "—";
     const parts = dateStr.split("-");
+    console.log("parts", parts)
     if (parts.length === 3) {
         return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }

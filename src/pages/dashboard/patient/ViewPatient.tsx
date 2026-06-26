@@ -7,7 +7,14 @@ import {
     Paper,
     Avatar,
     Stack,
-    IconButton
+    IconButton,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Chip
 } from "@mui/material";
 import {
     ArrowBack,
@@ -21,11 +28,22 @@ import {
 import { useParams, useNavigate } from "react-router";
 import { useGetPatientByIdQuery } from "../../../redux/api/patientAPI";
 
+type Status = "BOOKED" | "PRESENT" | "ABSENT" | "VISITED";
+
+const STATUS_CONFIG: Record<Status, { label: string; color: "warning" | "success" | "error" | "primary" }> = {
+    BOOKED: { label: "Booked", color: "warning" },
+    PRESENT: { label: "Present", color: "success" },
+    ABSENT: { label: "Absent", color: "error" },
+    VISITED: { label: "Visited", color: "primary" },
+};
+
 export default function ViewPatient() {
     const { patientId } = useParams();
     const navigate = useNavigate();
     const { data, isLoading } = useGetPatientByIdQuery(Number(patientId));
     const patientData = (data as any)?.data;
+
+    console.log(data)
 
     if (isLoading) {
         return (
@@ -125,6 +143,111 @@ export default function ViewPatient() {
                                 <InfoItem label="Created At" value={patientData?.createdAt ? new Date(patientData.createdAt).toLocaleDateString() : "N/A"} icon={<Event />} />
                                 <InfoItem label="Last Updated" value={patientData?.updatedAt ? new Date(patientData.updatedAt).toLocaleDateString() : "N/A"} icon={<Event />} />
                             </Grid>
+                        </Paper>
+
+                        {/* Appointment History Card */}
+                        <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0" }}>
+                            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+                                <Stack direction="row" sx={{ alignItems: "center", gap: 1.5 }}>
+                                    <Event sx={{ color: "#3b82f6" }} />
+                                    <Typography variant="h6" sx={{ fontWeight: 800, color: "#1e293b" }}>
+                                        Appointment History
+                                    </Typography>
+                                </Stack>
+                                <Chip
+                                    label={`${patientData?.appointments?.length || 0} Total`}
+                                    size="small"
+                                    sx={{ fontWeight: 700, bgcolor: "#eff6ff", color: "#3b82f6" }}
+                                />
+                            </Box>
+
+                            {(!patientData?.appointments || patientData.appointments.length === 0) ? (
+                                <Box sx={{ py: 6, textAlign: "center", color: "#94a3b8" }}>
+                                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                        No appointments found for this patient.
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                <TableContainer>
+                                    <Table sx={{ minWidth: 500 }}>
+                                        <TableHead sx={{ bgcolor: "#f8fafc" }}>
+                                            <TableRow>
+                                                <TableCell sx={{ fontWeight: 700, color: "#475569" }}>Date</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: "#475569" }}>Type</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: "#475569" }}>Status</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: "#475569" }}>Payment</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: "#475569" }} align="right">Fee</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {patientData.appointments.map((appt: any, idx: number) => {
+                                                const fee = appt.visitingFee ?? 0;
+                                                const disc = appt.discount ?? 0;
+                                                const netFee = Math.max(0, fee - disc);
+                                                const status = (appt.status ?? "BOOKED") as Status;
+
+                                                return (
+                                                    <TableRow key={idx} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+                                                        <TableCell sx={{ fontWeight: 600, color: "#1e293b" }}>
+                                                            {new Date(appt.visitingDate).toLocaleDateString("en-US", {
+                                                                year: "numeric",
+                                                                month: "short",
+                                                                day: "numeric",
+                                                            })}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Chip
+                                                                label={appt.patientType}
+                                                                size="small"
+                                                                sx={{
+                                                                    fontWeight: 700,
+                                                                    fontSize: "11px",
+                                                                    bgcolor: appt.patientType === "NEW" ? "#ecfdf5" : "#f0f9ff",
+                                                                    color: appt.patientType === "NEW" ? "#059669" : "#0284c7",
+                                                                }}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Chip
+                                                                label={STATUS_CONFIG[status]?.label || status}
+                                                                color={STATUS_CONFIG[status]?.color || "default"}
+                                                                size="small"
+                                                                sx={{ fontWeight: 700, fontSize: "11px" }}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Chip
+                                                                label={appt.paymentStatus}
+                                                                size="small"
+                                                                sx={{
+                                                                    fontWeight: 700,
+                                                                    fontSize: "11px",
+                                                                    bgcolor: appt.paymentStatus === "PAID" ? "#ecfdf5" : appt.paymentStatus === "UNPAID" ? "#fef2f2" : "#fffbeb",
+                                                                    color: appt.paymentStatus === "PAID" ? "#059669" : appt.paymentStatus === "UNPAID" ? "#dc2626" : "#d97706",
+                                                                }}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell align="right" sx={{ fontWeight: 700, color: "#1e293b" }}>
+                                                            {disc > 0 ? (
+                                                                <Stack spacing={0.2} sx={{ alignItems: "flex-end" }}>
+                                                                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                                                        ৳{netFee}
+                                                                    </Typography>
+                                                                    <Typography variant="caption" sx={{ textDecoration: "line-through", color: "#94a3b8" }}>
+                                                                        ৳{fee}
+                                                                    </Typography>
+                                                                </Stack>
+                                                            ) : (
+                                                                `৳${fee}`
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            )}
                         </Paper>
                     </Stack>
                 </Grid>

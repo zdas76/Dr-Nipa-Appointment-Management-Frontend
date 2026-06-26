@@ -137,7 +137,8 @@ export default function UpdateAppointmentForm({ id, onCancel }: UpdateAppointmen
 
     }, [lastVisitingDate, vDate, setValue, doctorinfo]);
 
-    const onSubmit: SubmitHandler<FormData> = async (formData) => {
+    const onSubmit: SubmitHandler<z.input<typeof schema>> = async (values) => {
+        const formData = values as FormData;
 
         if (!data) return;
         try {
