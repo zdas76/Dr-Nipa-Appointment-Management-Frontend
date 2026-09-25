@@ -1,9 +1,25 @@
-import { Box, Divider, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import {
+  Box,
+  Divider,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from "@mui/material";
 import BasicModal from "../../../component/Modal/BasicModel";
 import UpdateModal from "../../../component/Modal/UpdateModal";
 import CreatePatientForm from "../../../component/Patient/CreatePatientForm";
 import UpdatePatientForm from "../../../component/Patient/UpdatePatientForm";
-import { useDeletePatientMutation, useGetAllPatientQuery } from "../../../redux/api/patientAPI";
+import {
+  useDeletePatientMutation,
+  useGetAllPatientQuery,
+} from "../../../redux/api/patientAPI";
 import { Delete, Edit, Visibility } from "@mui/icons-material";
 import { useState } from "react";
 import { getResponse } from "../../../utils/getResponst";
@@ -11,10 +27,26 @@ import type { TPatient } from "../../../types/User";
 import { Link } from "react-router";
 
 export default function PatientManagement() {
-  const { data: patients, isLoading } = useGetAllPatientQuery("", { refetchOnMountOrArgChange: true });
+  const { data: patients, isLoading } = useGetAllPatientQuery("", {
+    refetchOnMountOrArgChange: true,
+  });
+
   const [deletePatient] = useDeletePatientMutation();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<TPatient | null>(null);
+  const [searchText, setSearchText] = useState("");
+
+  const filteredPatients = (patients?.data ?? []).filter((row: TPatient) => {
+    const query = searchText.trim().toLowerCase();
+
+    if (!query) return true;
+
+    return [row.name, row.contactNumber, row.patientId].some((value) =>
+      String(value ?? "")
+        .toLowerCase()
+        .includes(query),
+    );
+  });
 
   const handleEdit = (patient: TPatient) => {
     setSelectedPatient(patient);
@@ -30,8 +62,31 @@ export default function PatientManagement() {
 
   return (
     <Box>
-      <Box sx={{ p: 2, bgcolor: "white", borderRadius: 3, display: "flex", gap: 2, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Typography sx={{ fontSize: 20, fontWeight: 500 }}>Patient Management</Typography>
+      <Box
+        sx={{
+          p: 2,
+          bgcolor: "white",
+          borderRadius: 3,
+          display: "flex",
+          gap: 2,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Typography sx={{ fontSize: 20, fontWeight: 500 }}>
+          Patient Management
+        </Typography>
+        <Box className="flex-1">
+          <TextField
+            placeholder="Search by name or phone number or Patient Id"
+            size="small"
+            type="text"
+            fullWidth
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+        </Box>
 
         <BasicModal buttonLabel="Add Patient">
           <CreatePatientForm />
@@ -59,10 +114,10 @@ export default function PatientManagement() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {patients?.data?.map((row: TPatient, index: number) => (
+                {filteredPatients.map((row: TPatient, index: number) => (
                   <TableRow
                     key={row.id}
-                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
                     <TableCell align="left">{index + 1}</TableCell>
                     <TableCell align="left" component="th" scope="row">
@@ -74,7 +129,14 @@ export default function PatientManagement() {
                     <TableCell align="left">{row.address}</TableCell>
                     <TableCell align="left">{row.patientId}</TableCell>
                     <TableCell align="center">
-                      <Stack direction="row" sx={{ alignItems: "center", justifyContent: "center", gap: 2 }}>
+                      <Stack
+                        direction="row"
+                        sx={{
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 2,
+                        }}
+                      >
                         <Link to={`${row.patientId}`}>
                           <Visibility
                             color="primary"

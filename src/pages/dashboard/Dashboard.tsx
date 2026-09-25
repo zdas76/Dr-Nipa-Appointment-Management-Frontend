@@ -1,10 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import {
-  Typography,
-  Chip,
-  Avatar,
-  Tooltip,
-} from "@mui/material";
+import { Typography, Chip, Avatar, Tooltip } from "@mui/material";
 import {
   CalendarMonth,
   CheckCircle,
@@ -32,7 +28,7 @@ type Status = "BOOKED" | "PRESENT" | "ABSENT" | "VISITED";
 
 export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
 
   // Get current user details for greeting
@@ -56,7 +52,7 @@ export default function Dashboard() {
     {
       skip: !selectedDate,
       refetchOnMountOrArgChange: true,
-    }
+    },
   );
 
   const allData: TAppointment[] = appointments?.data ?? [];
@@ -79,8 +75,8 @@ export default function Dashboard() {
 
   const reportTotals = categories.reduce(
     (acc, cat) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const catData = (dailyReport as any)?.data?.[cat] || (dailyReport as any)?.[cat] || {};
+      const catData =
+        (dailyReport as any)?.data?.[cat] || (dailyReport as any)?.[cat] || {};
       const visitingAmount = Number(catData.TotalVisitingAmount ?? 0);
       const connectorAmount = Number(catData.TotalConnectorAmount ?? 0);
       const discount = Number(catData.TotalDiscount ?? 0);
@@ -100,25 +96,28 @@ export default function Dashboard() {
       TotalPatient: 0,
       TotalVisitingAmount: 0,
       TotalAmount: 0,
-    }
+    },
   );
 
   // Calculate payment statistics
   const paidCount = allData.filter((i) => i.paymentStatus === "PAID").length;
   const unpaidCount = allData.filter(
-    (i) => i.paymentStatus === "UNPAID" || i.paymentStatus === "PARTIALLY_PAID"
+    (i) => i.paymentStatus === "UNPAID" || i.paymentStatus === "PARTIALLY_PAID",
   ).length;
   const totalPaidUnpaid = paidCount + unpaidCount;
   const paidPercentage =
     totalPaidUnpaid > 0 ? Math.round((paidCount / totalPaidUnpaid) * 100) : 0;
 
   // Format date for visual presentation
-  const formattedDisplayDate = new Date(selectedDate).toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDisplayDate = new Date(selectedDate).toLocaleDateString(
+    "en-US",
+    {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    },
+  );
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12 px-4 py-2">
@@ -134,7 +133,10 @@ export default function Dashboard() {
           </Typography>
           <Typography className="text-slate-500 text-sm mt-1">
             Welcome to the Clinic Panel. Here is your practice overview for{" "}
-            <span className="font-semibold text-slate-700">{formattedDisplayDate}</span>.
+            <span className="font-semibold text-slate-700">
+              {formattedDisplayDate}
+            </span>
+            .
           </Typography>
         </div>
 
@@ -148,7 +150,7 @@ export default function Dashboard() {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-transparent border-none outline-hidden font-semibold text-sm text-slate-700 cursor-pointer w-[130px]"
+              className="bg-transparent border-none outline-hidden font-semibold text-sm text-slate-700 cursor-pointer w-32.5"
             />
           </div>
         </div>
@@ -157,7 +159,7 @@ export default function Dashboard() {
       {/* Appointment Status Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Booked Appointments */}
-        <div className="group relative overflow-hidden bg-gradient-to-br from-amber-50/80 to-amber-100/20 border border-amber-200/50 p-6 rounded-2xl shadow-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:border-amber-300">
+        <div className="group relative overflow-hidden bg-linear-to-br from-amber-50/80 to-amber-100/20 border border-amber-200/50 p-6 rounded-2xl shadow-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:border-amber-300">
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <Typography className="text-xs font-bold text-amber-700/80 uppercase tracking-wider">
@@ -181,7 +183,7 @@ export default function Dashboard() {
         </div>
 
         {/* Present / Checked-In */}
-        <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-50/80 to-emerald-100/20 border border-emerald-200/50 p-6 rounded-2xl shadow-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:border-emerald-300">
+        <div className="group relative overflow-hidden bg-linear-to-br from-emerald-50/80 to-emerald-100/20 border border-emerald-200/50 p-6 rounded-2xl shadow-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:border-emerald-300">
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <Typography className="text-xs font-bold text-emerald-700/80 uppercase tracking-wider">
@@ -205,7 +207,7 @@ export default function Dashboard() {
         </div>
 
         {/* Visited / Completed */}
-        <div className="group relative overflow-hidden bg-gradient-to-br from-blue-50/80 to-blue-100/20 border border-blue-200/50 p-6 rounded-2xl shadow-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:border-blue-300">
+        <div className="group relative overflow-hidden bg-linear-to-br from-blue-50/80 to-blue-100/20 border border-blue-200/50 p-6 rounded-2xl shadow-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:border-blue-300">
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <Typography className="text-xs font-bold text-blue-700/80 uppercase tracking-wider">
@@ -229,7 +231,7 @@ export default function Dashboard() {
         </div>
 
         {/* Absent / No-Show */}
-        <div className="group relative overflow-hidden bg-gradient-to-br from-rose-50/80 to-rose-100/20 border border-rose-200/50 p-6 rounded-2xl shadow-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:border-rose-300">
+        <div className="group relative overflow-hidden bg-linear-to-br from-rose-50/80 to-rose-100/20 border border-rose-200/50 p-6 rounded-2xl shadow-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:border-rose-300">
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <Typography className="text-xs font-bold text-rose-700/80 uppercase tracking-wider">
@@ -280,7 +282,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-
           {/* Total Discount */}
           <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors">
             <div className="p-3 bg-amber-50 text-amber-600 rounded-lg">
@@ -297,7 +298,7 @@ export default function Dashboard() {
           </div>
 
           {/* Net Earnings */}
-          <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors bg-gradient-to-r from-slate-50 to-indigo-50/30 border border-slate-100 rounded-xl">
+          <div className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors bg-linear-to-r from-slate-50 to-indigo-50/30 border border-slate-100 rounded-xl">
             <div className="p-3 bg-indigo-500 text-white rounded-lg shadow-sm">
               <TrendingUp />
             </div>
@@ -348,8 +349,9 @@ export default function Dashboard() {
                 <Typography className="text-sm font-bold text-slate-700">
                   No Appointments Scheduled
                 </Typography>
-                <Typography className="text-xs text-slate-400 max-w-[280px] mt-1">
-                  There are no appointments registered for {formattedDisplayDate}.
+                <Typography className="text-xs text-slate-400 max-w-70 mt-1">
+                  There are no appointments registered for{" "}
+                  {formattedDisplayDate}.
                 </Typography>
               </div>
             ) : (
@@ -361,7 +363,9 @@ export default function Dashboard() {
                       <th className="py-2.5 px-2">Type</th>
                       <th className="py-2.5 px-2">Time</th>
                       <th className="py-2.5 px-2">Status</th>
-                      <th className="py-2.5 px-3 rounded-r-lg text-right">Payment</th>
+                      <th className="py-2.5 px-3 rounded-r-lg text-right">
+                        Payment
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -398,7 +402,8 @@ export default function Dashboard() {
                       };
 
                       const currentStatus = (app.status ?? "BOOKED") as Status;
-                      const stat = statusConfig[currentStatus] || statusConfig.BOOKED;
+                      const stat =
+                        statusConfig[currentStatus] || statusConfig.BOOKED;
 
                       return (
                         <tr
@@ -444,7 +449,9 @@ export default function Dashboard() {
                               label={app.patientType}
                               size="small"
                               className="font-bold text-[10px]"
-                              color={app.patientType === "NEW" ? "info" : "default"}
+                              color={
+                                app.patientType === "NEW" ? "info" : "default"
+                              }
                               variant="outlined"
                               sx={{ height: 18, fontSize: 10 }}
                             />
@@ -467,7 +474,11 @@ export default function Dashboard() {
                               label={app.paymentStatus ?? "UNPAID"}
                               size="small"
                               className="font-bold text-[10px] uppercase"
-                              color={app.paymentStatus === "PAID" ? "success" : "error"}
+                              color={
+                                app.paymentStatus === "PAID"
+                                  ? "success"
+                                  : "error"
+                              }
                               sx={{ height: 18, fontSize: 9 }}
                             />
                           </td>
@@ -500,7 +511,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-3">
               {/* Add Appointment */}
               <Link to="/dashboard/appointment" className="no-underline">
-                <div className="flex flex-col items-center justify-center p-4 bg-blue-50/40 hover:bg-blue-50 border border-blue-100 rounded-xl transition-all text-center cursor-pointer group h-[105px]">
+                <div className="flex flex-col items-center justify-center p-4 bg-blue-50/40 hover:bg-blue-50 border border-blue-100 rounded-xl transition-all text-center cursor-pointer group h-26.25">
                   <div className="p-2 bg-blue-500 text-white rounded-lg shadow-sm group-hover:scale-110 transition-transform">
                     <AddBox className="text-lg" />
                   </div>
@@ -512,7 +523,7 @@ export default function Dashboard() {
 
               {/* Register Patient */}
               <Link to="/dashboard/patient-management" className="no-underline">
-                <div className="flex flex-col items-center justify-center p-4 bg-emerald-50/40 hover:bg-emerald-50 border border-emerald-100 rounded-xl transition-all text-center cursor-pointer group h-[105px]">
+                <div className="flex flex-col items-center justify-center p-4 bg-emerald-50/40 hover:bg-emerald-50 border border-emerald-100 rounded-xl transition-all text-center cursor-pointer group h-26.25">
                   <div className="p-2 bg-emerald-500 text-white rounded-lg shadow-sm group-hover:scale-110 transition-transform">
                     <PersonAdd className="text-lg" />
                   </div>
@@ -524,7 +535,7 @@ export default function Dashboard() {
 
               {/* Send SMS Alert */}
               <Link to="/dashboard/send-sms" className="no-underline">
-                <div className="flex flex-col items-center justify-center p-4 bg-purple-50/40 hover:bg-purple-50 border border-purple-100 rounded-xl transition-all text-center cursor-pointer group h-[105px]">
+                <div className="flex flex-col items-center justify-center p-4 bg-purple-50/40 hover:bg-purple-50 border border-purple-100 rounded-xl transition-all text-center cursor-pointer group h-26.25">
                   <div className="p-2 bg-purple-500 text-white rounded-lg shadow-sm group-hover:scale-110 transition-transform">
                     <Message className="text-lg" />
                   </div>
@@ -535,8 +546,11 @@ export default function Dashboard() {
               </Link>
 
               {/* View Daily Report */}
-              <Link to="/dashboard/report/daily-report" className="no-underline">
-                <div className="flex flex-col items-center justify-center p-4 bg-amber-50/40 hover:bg-amber-50 border border-amber-100 rounded-xl transition-all text-center cursor-pointer group h-[105px]">
+              <Link
+                to="/dashboard/report/daily-report"
+                className="no-underline"
+              >
+                <div className="flex flex-col items-center justify-center p-4 bg-amber-50/40 hover:bg-amber-50 border border-amber-100 rounded-xl transition-all text-center cursor-pointer group h-26.25">
                   <div className="p-2 bg-amber-500 text-white rounded-lg shadow-sm group-hover:scale-110 transition-transform">
                     <Assessment className="text-lg" />
                   </div>
@@ -562,7 +576,10 @@ export default function Dashboard() {
               <div className="flex items-center gap-4 border-b border-slate-50 pb-4">
                 {/* SVG Circular Progress Ring */}
                 <div className="relative w-14 h-14 flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  <svg
+                    className="w-full h-full transform -rotate-90"
+                    viewBox="0 0 36 36"
+                  >
                     <path
                       className="text-slate-100"
                       strokeWidth="3.5"

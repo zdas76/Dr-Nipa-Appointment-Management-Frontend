@@ -1,35 +1,40 @@
 import { useSearchParams } from "react-router";
 
 function formatDate(dateStr: string | null): string {
-    console.log("dateStr", dateStr)
-    if (!dateStr) return "—";
-    const parts = dateStr.split("-");
-    console.log("parts", parts)
-    if (parts.length === 3) {
-        return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
-    return dateStr;
+  console.log("dateStr", dateStr);
+  if (!dateStr) return "—";
+  const parts = dateStr.split("-");
+  console.log("parts", parts);
+  if (parts.length === 3) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  return dateStr;
 }
 
 export default function PrintPage() {
-    const [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
-    const patientId = searchParams.get("patientId") ?? "—";
-    const patientName = searchParams.get("patientName") ?? "—";
-    const contactNumber = searchParams.get("contactNumber") ?? "—";
-    const gender = searchParams.get("gender") ?? "—";
-    const age = searchParams.get("age") ?? "—";
-    const patientType = searchParams.get("patientType") ?? "—";
-    const visitingDate = searchParams.get("visitingDate") ?? null;
-    const visitingFee = searchParams.get("visitingFee") ?? "—";
-    const visitingTime = searchParams.get("visitingTime") ?? "—";
+  const patientId = searchParams.get("patientId") ?? "—";
+  const patientName = searchParams.get("patientName") ?? "—";
+  const contactNumber = searchParams.get("contactNumber") ?? "—";
+  const gender = searchParams.get("gender") ?? "—";
+  const age = searchParams.get("age") ?? "—";
+  const patientType = searchParams.get("patientType") ?? "—";
+  const visitingDate = searchParams.get("visitingDate") ?? null;
+  const visitingFee = searchParams.get("visitingFee") ?? "—";
+  const now = new Date();
+  const visitingTime = now.toLocaleTimeString("en-US", {
+    hour12: true,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
-    const handlePrint = () => window.print();
-    const handleCancel = () => window.close();
+  const handlePrint = () => window.print();
+  const handleCancel = () => window.close();
 
-    return (
-        <>
-            <style>{`
+  return (
+    <>
+      <style>{`
                 * { margin: 0; padding: 0; box-sizing: border-box; }
 
                 body {
@@ -137,40 +142,61 @@ export default function PrintPage() {
                 }
             `}</style>
 
-            <div className="print-wrapper">
-                {/* ─── PRINTABLE AREA ─── */}
-                <div className="print-box" id="printableArea">
-                    <div className="row-stack">
-                        <div className="content-stack">
-                            <div className="doctor-name">DR. NAHIDA ISLAM NIPA</div>
-                            <div className="designation">
-                                Associate Professor & Head of Department
-                                <br />
-                                Dermatologist, Venereologist & Dermatosurgeon
-                                <br />
-                                Community Based Medical College Bangladesh
-                                <br />
-                                Mobile: 01777016179
-                            </div>
-                            <hr className="divider-custom" />
-                            <div className="info-line"><strong>Patient Id:</strong> {patientId}</div>
-                            <div className="info-line"><strong>Patient Name:</strong> {patientName}</div>
-                            <div className="info-line"><strong>Gender:</strong> {gender}</div>
-                            <div className="info-line"><strong>Age:</strong> {age}</div>
-                            <div className="info-line"><strong>Patient Type:</strong> {patientType}</div>
-                            <div className="info-line"><strong>Visiting Fee:</strong> {visitingFee}</div>
-                            <div className="info-line"><strong>Contact Number:</strong> {contactNumber}</div>
-                            <div className="info-line"><strong>Visiting Date:</strong> {formatDate(visitingDate)} at {visitingTime}</div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* ─── ACTION BUTTONS ─── */}
-                <div className="actions">
-                    <button className="btn btn-outline" onClick={handleCancel}>Cancel</button>
-                    <button className="btn btn-contained" onClick={handlePrint}>Print</button>
-                </div>
+      <div className="print-wrapper">
+        {/* ─── PRINTABLE AREA ─── */}
+        <div className="print-box" id="printableArea">
+          <div className="row-stack">
+            <div className="content-stack">
+              <div className="doctor-name">DR. NAHIDA ISLAM NIPA</div>
+              <div className="designation">
+                Associate Professor & Head of Department
+                <br />
+                Dermatologist, Venereologist & Dermatosurgeon
+                <br />
+                Community Based Medical College Bangladesh
+                <br />
+                Mobile: 01777016179
+              </div>
+              <hr className="divider-custom" />
+              <div className="info-line">
+                <strong>Patient Id:</strong> {patientId}
+              </div>
+              <div className="info-line">
+                <strong>Patient Name:</strong> {patientName}
+              </div>
+              <div className="info-line">
+                <strong>Gender:</strong> {gender}
+              </div>
+              <div className="info-line">
+                <strong>Age:</strong> {age}
+              </div>
+              <div className="info-line">
+                <strong>Patient Type:</strong> {patientType}
+              </div>
+              <div className="info-line">
+                <strong>Visiting Fee:</strong> {visitingFee}
+              </div>
+              <div className="info-line">
+                <strong>Contact Number:</strong> {contactNumber}
+              </div>
+              <div className="info-line">
+                <strong>Visiting Date:</strong> {formatDate(visitingDate)} at{" "}
+                {visitingTime}
+              </div>
             </div>
-        </>
-    );
+          </div>
+        </div>
+
+        {/* ─── ACTION BUTTONS ─── */}
+        <div className="actions">
+          <button className="btn btn-outline" onClick={handleCancel}>
+            Cancel
+          </button>
+          <button className="btn btn-contained" onClick={handlePrint}>
+            Print
+          </button>
+        </div>
+      </div>
+    </>
+  );
 }

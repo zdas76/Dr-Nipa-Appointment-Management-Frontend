@@ -25,7 +25,8 @@ export const baseApi = createApi({
     "appointment",
     "doctor",
     "patient",
-    "connector"
+    "connector",
+    "sms",
   ],
   endpoints: () => ({}),
 });

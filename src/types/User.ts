@@ -27,14 +27,13 @@ export type TAssistant = {
 
 export type TPatient = {
   id?: number;
-  patientId: number,
+  patientId: number;
   name: string;
   age: string;
   sex: "MALE" | "FEMALE" | "OTHER";
   contactNumber: string;
   address: string;
   isDeleted: boolean;
-
 };
 
 export type TConnector = {
@@ -46,7 +45,6 @@ export type TConnector = {
   newPatientAmount: number;
   oldPatientAmount: number;
   isDeleted: boolean;
-
 };
 
 export type TAppointment = {
@@ -68,16 +66,14 @@ export type TAppointment = {
     patientId: number;
     contactNumber: string;
     sex: "MALE" | "FEMALE" | "OTHER";
-    age: string
+    age: string;
   };
   connectorInfo?: {
     name: string;
-    contactNumber: string;
-    diagnosticName: string;
-    phoneNumber: string;
+    diagnosticName?: string;
   };
 };
 
 export type TAppointmentList = {
   data: TAppointment[] | null;
-}
+};
