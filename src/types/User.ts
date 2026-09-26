@@ -72,6 +72,13 @@ export type TAppointment = {
     name: string;
     diagnosticName?: string;
   };
+  sendMessage: [
+    {
+      contactNumber: string;
+      message_ID: string;
+      appointmentId: number;
+    },
+  ];
 };
 
 export type TAppointmentList = {

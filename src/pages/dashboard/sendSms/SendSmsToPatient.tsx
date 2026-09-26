@@ -38,6 +38,7 @@ export default function SendSmsToPatient() {
   );
 
   const allIds = bookAppointments.map((_, i) => i);
+
   const isAllSelected =
     bookAppointments.length > 0 && selected.length === bookAppointments.length;
   const isIndeterminate =
@@ -66,10 +67,18 @@ export default function SendSmsToPatient() {
 
   const handelSendMessage = async () => {
     try {
-      const toUser = selectedContacts.join(",");
+      const appointmentInfo = selected
+        .map((index) => bookAppointments[index])
+        .filter((app): app is TAppointment & { id: number } =>
+          Boolean(app?.id && app.patientInfo?.contactNumber?.trim()),
+        )
+        .map((app) => ({
+          contactNumber: app.patientInfo!.contactNumber!.trim(),
+          appointmentId: app.id,
+        }));
       const messageContent = message.trim();
 
-      const res = await sendSms({ toUser, messageContent });
+      const res = await sendSms({ appointmentInfo, messageContent });
 
       if (res.data) {
         await Swal.fire({

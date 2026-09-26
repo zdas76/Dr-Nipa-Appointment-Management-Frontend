@@ -3,7 +3,10 @@ import { baseApi } from "./baseApi";
 const smsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     sendSms: builder.mutation({
-      query: (data: { toUser: string; messageContent: string }) => {
+      query: (data: {
+        appointmentInfo: { contactNumber: string; appointmentId: number }[];
+        messageContent: string;
+      }) => {
         return {
           url: `/sms`,
           method: "POST",
@@ -12,7 +15,15 @@ const smsApi = baseApi.injectEndpoints({
       },
       invalidatesTags: ["sms"],
     }),
+
+    getSMSByMessageId: builder.query({
+      query: (messageId: string) => ({
+        url: `/sms`,
+        method: "GET",
+        params: { messageId },
+      }),
+    }),
   }),
 });
 
-export const { useSendSmsMutation } = smsApi;
+export const { useSendSmsMutation, useGetSMSByMessageIdQuery } = smsApi;

@@ -10,10 +10,11 @@ export const getResponse = (res: any) => {
       res?.error?.error ||
         res?.error?.data?.message ||
         res?.error?.errors ||
+        res?.error[0].message ||
         res?.error?.data ||
         res?.message ||
         "Something went wrong",
     );
-    return res;
+    return res.error;
   }
 };

@@ -143,7 +143,7 @@ export default function CreateAppointmentForm({
     } else {
       setValue("name", "");
       setValue("age", "");
-      setValue("sex", "MALE");
+      setValue("sex", "FEMALE");
       setValue("address", "");
       setValue("patientId", undefined);
     }
@@ -185,27 +185,26 @@ export default function CreateAppointmentForm({
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     const age = ageValue + " " + ageUnit;
 
-    try {
-      const res = await createAppointment({ ...data, age }).unwrap();
-      const result = getResponse(res);
+    const res = await createAppointment({ ...data, age });
+    const result = getResponse(res);
 
-      if (result.success) {
-        toast.success(result.message);
+    if (result.success === true) {
+      toast.success(result.message);
 
-        const toUser = result?.data?.patientInfo.contactNumber;
-        const messageContent = `Appointment For Dr. Nahida Islam Nipa, Patient: ${result?.data?.patientInfo.name}, date: ${dayjs(result.data.visitingDate).format("DD-MMM-YYYY")}, ID# ${result.data.patientId}, Please Attend 4:00 pm to 9:00 pm, Room: 301 (3rd Floor), Delta Health Care, Medical College Gate, Mymensingh. any query: 01777-016179`;
+      const dayName = dayjs(result.data.visitingDate).format("dddd");
 
-        await sendSms({ toUser, messageContent });
+      const appointmentInfo = {
+        contactNumber: result?.data?.patientInfo.contactNumber,
+        appointmentId: result.data.id,
+      };
+      const messageContent = `Appointment For Dr. Nahida Islam Nipa, Patient: ${result?.data?.patientInfo.name}, date: ${dayjs(result.data.visitingDate).format("DD-MMM-YYYY")} - ${dayName} , ID# ${result.data.patientId}, Please Attend 4:00 pm to 9:00 pm, Room: 301 (3rd Floor), Delta Health Care, Medical College Gate, Mymensingh. any query: 01777-016179`;
 
-        reset();
-        setSelectedPatient(null);
-        setPatientInputValue("");
-        onCancel?.();
-      } else {
-        toast.error(result.message);
-      }
-    } catch {
-      toast.error("Failed to create appointment");
+      await sendSms({ appointmentInfo: [appointmentInfo], messageContent });
+
+      reset();
+      setSelectedPatient(null);
+      setPatientInputValue("");
+      onCancel?.();
     }
   };
   if (isDoctorLoading || isLastVisitingDateLoading) {

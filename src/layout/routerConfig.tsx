@@ -1,4 +1,14 @@
-import { AccessAlarmOutlined, AddCommentRounded, ChecklistRtl, FolderCopy, Forum, PersonalInjuryRounded, Summarize, } from "@mui/icons-material";
+import {
+  AccessAlarmOutlined,
+  AddCommentRounded,
+  ChecklistRtl,
+  FolderCopy,
+  Forum,
+  PersonalInjuryRounded,
+  SmsFailed,
+  SmsTwoTone,
+  Summarize,
+} from "@mui/icons-material";
 import AssistantManagement from "../pages/dashboard/assistant/Assistant";
 import PatientManagement from "../pages/dashboard/patient/Patient";
 import ConnectorManagement from "../pages/dashboard/connector/Connector";
@@ -11,7 +21,7 @@ import ViewAppointmentinfo from "../pages/dashboard/Appoint/ViewAppointmentinfo"
 import AppointmentList from "../pages/dashboard/Appoint/AppointmentList";
 import SendSmsToPatient from "../pages/dashboard/sendSms/SendSmsToPatient";
 import DailyReport from "../pages/dashboard/report/DailyReport";
-
+import SmsStatus from "../pages/dashboard/sendSms/SmsSataus";
 
 export interface RouteConfig {
   path?: string;
@@ -100,12 +110,26 @@ export const dashboardRoutes: RouteConfig[] = [
   },
 
   {
-    path: "send-sms",
-    title: "Send SMS",
-    icon: <Forum />,
+    path: "sms",
+    title: "SMS",
+    icon: <SmsFailed />,
     roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
-    element: <SendSmsToPatient />,
-
+    children: [
+      {
+        path: "send-sms",
+        title: "Send SMS",
+        icon: <Forum />,
+        roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
+        element: <SendSmsToPatient />,
+      },
+      {
+        path: "sms-status",
+        title: "SMS Status",
+        icon: <SmsTwoTone />,
+        roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
+        element: <SmsStatus />,
+      },
+    ],
   },
   {
     path: "report",
@@ -120,6 +144,6 @@ export const dashboardRoutes: RouteConfig[] = [
         roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
         element: <DailyReport />,
       },
-    ]
-  }
+    ],
+  },
 ];
