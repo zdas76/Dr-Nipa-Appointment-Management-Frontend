@@ -245,12 +245,13 @@ export default function CreateAppointmentForm({
                   label="Patient Id"
                   variant="outlined"
                   type="number"
+                  size="small"
                   name="patientId"
                   onChange={(e) => setDefaultPatientId(Number(e.target.value))}
                 />
 
                 <SearchOffSharp
-                  sx={{ fontSize: 55 }}
+                  sx={{ fontSize: 40, width: 70 }}
                   className="text-white cursor-pointer p-2 bg-green-500 rounded-xl"
                   onClick={() => setPatientId(defaultPatientId)}
                 />
@@ -308,6 +309,7 @@ export default function CreateAppointmentForm({
                         {...params}
                         label="Contact Number"
                         error={!!errors.contactNumber}
+                        size="small"
                         helperText={errors.contactNumber?.message}
                       />
                     )}
@@ -320,6 +322,7 @@ export default function CreateAppointmentForm({
                 label="Full Name"
                 variant="outlined"
                 focused
+                size="small"
                 {...register("name")}
                 error={!!errors.name}
                 helperText={errors.name?.message}
@@ -331,7 +334,7 @@ export default function CreateAppointmentForm({
                   name="sex"
                   control={control}
                   render={({ field }) => (
-                    <Select {...field} label="Sex">
+                    <Select {...field} label="Sex" size="small">
                       <MenuItem value="MALE">Male</MenuItem>
                       <MenuItem value="FEMALE">Female</MenuItem>
                       <MenuItem value="OTHER">Other</MenuItem>
@@ -345,6 +348,7 @@ export default function CreateAppointmentForm({
                   fullWidth
                   label="Age"
                   focused
+                  size="small"
                   defaultValue={ageValue}
                   variant="outlined"
                   onChange={(e) => {
@@ -356,6 +360,7 @@ export default function CreateAppointmentForm({
                 />
                 <Select
                   label="Age Unit"
+                  size="small"
                   defaultValue={ageUnit}
                   onChange={(e) => setAgeUnit(e.target.value as string)}
                 >
@@ -370,6 +375,7 @@ export default function CreateAppointmentForm({
                 label="Address"
                 variant="outlined"
                 multiline
+                size="small"
                 focused
                 rows={2}
                 sx={{ gridColumn: { md: "span 2" } }}
@@ -383,6 +389,7 @@ export default function CreateAppointmentForm({
                 label="Visiting Date"
                 type="date"
                 variant="outlined"
+                size="small"
                 focused
                 {...register("visitingDate")}
                 error={!!errors.visitingDate}
@@ -396,6 +403,7 @@ export default function CreateAppointmentForm({
                   <TextField
                     {...field}
                     select
+                    size="small"
                     label="Patient Type"
                     defaultValue=""
                     error={!!errors.patientType}
@@ -414,6 +422,7 @@ export default function CreateAppointmentForm({
                 type="time"
                 variant="outlined"
                 focused
+                size="small"
                 {...register("visitingTime")}
                 error={!!errors.visitingTime}
                 helperText={errors.visitingTime?.message}
@@ -441,6 +450,7 @@ export default function CreateAppointmentForm({
                       <TextField
                         {...params}
                         label="Select Connector (Optional)"
+                        size="small"
                         error={!!errors.connectorId}
                         helperText={errors.connectorId?.message}
                       />

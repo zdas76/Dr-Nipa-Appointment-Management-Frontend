@@ -7,6 +7,7 @@ const smsApi = baseApi.injectEndpoints({
         appointmentInfo: { contactNumber: string; appointmentId: number }[];
         messageContent: string;
       }) => {
+        console.log(data);
         return {
           url: `/sms`,
           method: "POST",

@@ -135,13 +135,13 @@ export const dashboardRoutes: RouteConfig[] = [
     path: "report",
     title: "Report",
     icon: <FolderCopy />,
-    roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
+    roles: ["ADMIN", "DOCTOR"],
     children: [
       {
         path: "daily-report",
         title: "Daily Report",
         icon: <Summarize />,
-        roles: ["ADMIN", "ASSISTANT", "DOCTOR"],
+        roles: ["ADMIN", "DOCTOR"],
         element: <DailyReport />,
       },
     ],

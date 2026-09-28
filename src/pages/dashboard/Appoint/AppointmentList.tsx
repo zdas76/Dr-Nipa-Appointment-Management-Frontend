@@ -159,7 +159,7 @@ export default function AppointmentList() {
   const handleStatusChange = async (newStatus: Status) => {
     if (!menuAppointmentId) return;
     try {
-      await updateStatus({ id: menuAppointmentId, status: newStatus }).unwrap();
+      await updateStatus({ id: menuAppointmentId, status: newStatus });
       toast.success(`Status changed to ${newStatus}`);
     } catch {
       toast.error("Failed to update status");

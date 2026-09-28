@@ -4,7 +4,7 @@ import {
   //   useGetLastVisitingDateQuery,
 } from "../../redux/api/appointment";
 import {
-  Autocomplete,
+  // Autocomplete,
   Box,
   Button,
   FormControl,
@@ -25,8 +25,8 @@ import { useEffect } from "react";
 import { useGetDoctorInforQuery } from "../../redux/api/doctorAPI";
 import { FrontLoader } from "@mui/icons-material";
 // import dayjs from "dayjs";
-import { useGetAllConnectorQuery } from "../../redux/api/connectorAPI";
-import type { TConnector } from "../../types/User";
+// import { useGetAllConnectorQuery } from "../../redux/api/connectorAPI";
+// import type { TConnector } from "../../types/User";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const schema = z.object({
@@ -73,10 +73,13 @@ export default function UpdateAppointmentForm({
   const { data: doctors, isLoading: isDoctorLoading } = useGetDoctorInforQuery(
     [],
   );
+
+  console.log(data);
+
   const doctorinfo = doctors?.data[0];
 
-  const { data: connectors, isLoading: isConnectorsLoading } =
-    useGetAllConnectorQuery({});
+  // const { data: connectors, isLoading: isConnectorsLoading } =
+  //   useGetAllConnectorQuery({});
 
   const [updateAppointment, { isLoading }] = useUpdateAppointmentMutation();
 
@@ -178,7 +181,7 @@ export default function UpdateAppointmentForm({
       const res = await updateAppointment({
         id: data.id,
         ...formData,
-      }).unwrap();
+      });
       const result = getResponse(res);
       if (result.success) {
         toast.success(result.message || "Appointment updated successfully");
@@ -194,8 +197,8 @@ export default function UpdateAppointmentForm({
 
   if (
     appIsLoading ||
-    isDoctorLoading ||
-    isConnectorsLoading
+    isDoctorLoading
+    // isConnectorsLoading
     // isLastVisitingDateLoading
   ) {
     return (
@@ -247,6 +250,7 @@ export default function UpdateAppointmentForm({
                 <TextField
                   fullWidth
                   label="Patient Name"
+                  size="small"
                   value={
                     data.patientInfo?.name ||
                     data.patient?.name ||
@@ -261,6 +265,7 @@ export default function UpdateAppointmentForm({
                   label="Visiting Date"
                   type="date"
                   variant="outlined"
+                  size="small"
                   focused
                   {...register("visitingDate")}
                   error={!!errors.visitingDate}
@@ -275,6 +280,7 @@ export default function UpdateAppointmentForm({
                       {...field}
                       value={field.value ?? ""}
                       select
+                      size="small"
                       label="Patient Type"
                       error={!!errors.patientType}
                       helperText={errors.patientType?.message}
@@ -291,15 +297,17 @@ export default function UpdateAppointmentForm({
                   type="time"
                   variant="outlined"
                   focused
+                  size="small"
                   {...register("visitingTime")}
                   error={!!errors.visitingTime}
                   helperText={errors.visitingTime?.message}
                 />
 
-                <TextField
+                {/* <TextField
                   fullWidth
                   label="Weight (kg)"
                   variant="outlined"
+                  size="small"
                   {...register("weight")}
                   error={!!errors.weight}
                   helperText={errors.weight?.message}
@@ -308,15 +316,17 @@ export default function UpdateAppointmentForm({
                   fullWidth
                   label="Blood Pressure (booldPusher)"
                   variant="outlined"
+                  size="small"
                   {...register("booldPusher")}
                   error={!!errors.booldPusher}
                   helperText={errors.booldPusher?.message}
-                />
+                /> */}
                 <TextField
                   fullWidth
                   label="Visiting Fee"
                   type="number"
                   variant="outlined"
+                  size="small"
                   disabled
                   {...register("visitingFee", { valueAsNumber: true })}
                   error={!!errors.visitingFee}
@@ -325,13 +335,14 @@ export default function UpdateAppointmentForm({
                 <TextField
                   fullWidth
                   label="Discount"
+                  size="small"
                   variant="outlined"
                   {...register("discount")}
                   error={!!errors.discount}
                   helperText={errors.discount?.message}
                 />
 
-                <FormControl fullWidth error={!!errors.bloodGroup}>
+                {/* <FormControl fullWidth error={!!errors.bloodGroup}>
                   <InputLabel>Blood Group</InputLabel>
                   <Controller
                     name="bloodGroup"
@@ -349,7 +360,7 @@ export default function UpdateAppointmentForm({
                       </Select>
                     )}
                   />
-                </FormControl>
+                </FormControl> */}
 
                 <FormControl fullWidth error={!!errors.paymentStatus}>
                   <InputLabel>Payment Status</InputLabel>
@@ -358,7 +369,7 @@ export default function UpdateAppointmentForm({
                     control={control}
                     defaultValue="UNPAID"
                     render={({ field }) => (
-                      <Select {...field} label="Payment Status">
+                      <Select {...field} label="Payment Status" size="small">
                         {["PAID", "UNPAID", "PARTIALLY_PAID"].map((status) => (
                           <MenuItem key={status} value={status}>
                             {status}
@@ -369,7 +380,7 @@ export default function UpdateAppointmentForm({
                   />
                 </FormControl>
 
-                <Controller
+                {/* <Controller
                   name="connectorId"
                   control={control}
                   render={({ field: { onChange, value } }) => (
@@ -392,12 +403,13 @@ export default function UpdateAppointmentForm({
                           {...params}
                           label="Select Connector (Optional)"
                           error={!!errors.connectorId}
+                          size="small"
                           helperText={errors.connectorId?.message}
                         />
                       )}
                     />
                   )}
-                />
+                /> */}
               </Box>
             </Box>
 

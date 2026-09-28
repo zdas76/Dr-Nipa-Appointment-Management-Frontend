@@ -147,7 +147,7 @@ export default function PrintPage() {
         <div className="print-box" id="printableArea">
           <div className="row-stack">
             <div className="content-stack">
-              <div className="doctor-name">DR. NAHIDA ISLAM NIPA</div>
+              {/* <div className="doctor-name">DR. NAHIDA ISLAM NIPA</div>
               <div className="designation">
                 Associate Professor & Head of Department
                 <br />
@@ -156,8 +156,8 @@ export default function PrintPage() {
                 Community Based Medical College Bangladesh
                 <br />
                 Mobile: 01777016179
-              </div>
-              <hr className="divider-custom" />
+              </div> */}
+              {/* <hr className="divider-custom" /> */}
               <div className="info-line">
                 <strong>Patient Id:</strong> {patientId}
               </div>
