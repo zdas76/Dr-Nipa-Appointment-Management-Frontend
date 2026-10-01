@@ -25,11 +25,16 @@ import { useState } from "react";
 import { getResponse } from "../../../utils/getResponst";
 import type { TPatient } from "../../../types/User";
 import { Link } from "react-router";
+import Swal from "sweetalert2";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../redux/store";
 
 export default function PatientManagement() {
   const { data: patients, isLoading } = useGetAllPatientQuery("", {
     refetchOnMountOrArgChange: true,
   });
+
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const [deletePatient] = useDeletePatientMutation();
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -54,10 +59,25 @@ export default function PatientManagement() {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this patient?")) {
-      const res = await deletePatient(id);
-      getResponse(res);
-    }
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const res = await deletePatient(id);
+        getResponse(res);
+      }
+      Swal.fire({
+        title: "Deleted!",
+        text: "Your file has been deleted.",
+        icon: "success",
+      });
+    });
   };
 
   return (
@@ -148,11 +168,14 @@ export default function PatientManagement() {
                           sx={{ cursor: "pointer" }}
                           onClick={() => handleEdit(row)}
                         />
-                        <Delete
-                          color="error"
-                          sx={{ cursor: "pointer" }}
-                          onClick={() => handleDelete(row.id!)}
-                        />
+                        {user?.role.includes("ADMIN") ||
+                          (user?.role.includes("DOCTOR") && (
+                            <Delete
+                              color="error"
+                              sx={{ cursor: "pointer" }}
+                              onClick={() => handleDelete(row.id!)}
+                            />
+                          ))}
                       </Stack>
                     </TableCell>
                   </TableRow>

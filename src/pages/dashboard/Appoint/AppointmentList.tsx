@@ -25,7 +25,12 @@ import {
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import { Edit, Print, SwapHoriz } from "@mui/icons-material";
+import {
+  BatteryChargingFull,
+  Edit,
+  Print,
+  SwapHoriz,
+} from "@mui/icons-material";
 import type { TAppointment } from "../../../types/User";
 import { toast } from "sonner";
 import UpdateModal from "../../../component/Modal/UpdateModal";
@@ -53,6 +58,19 @@ export default function AppointmentList() {
     null,
   );
   const [searchText, setSearchText] = useState("");
+  const [viewCount, setViewCount] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleViewCountChange = () => {
+    // Clear any existing timeout to avoid stacking
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setViewCount(true);
+    timeoutRef.current = setTimeout(() => {
+      setViewCount(false);
+    }, 3000); // 3 seconds
+  };
 
   const formatTime12h = (time: string): string => {
     if (!time) return "";
@@ -263,17 +281,33 @@ export default function AppointmentList() {
                 label={
                   <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
                     {STATUS_CONFIG[s].label}
-                    <Chip
-                      label={counts[s]}
-                      size="small"
-                      color={STATUS_CONFIG[s].color}
-                      sx={{ height: 20, fontSize: 11, fontWeight: 700 }}
-                    />
+                    {viewCount && (
+                      <Chip
+                        label={counts[s]}
+                        size="small"
+                        color={STATUS_CONFIG[s].color}
+                        sx={{ height: 20, fontSize: 11, fontWeight: 700 }}
+                      />
+                    )}
                   </Stack>
                 }
               />
             ))}
           </TabList>
+
+          <BatteryChargingFull
+            color={viewCount ? "error" : "success"}
+            sx={{
+              fontSize: 30,
+              position: "absolute",
+              right: 20,
+              top: 20,
+              cursor: "pointer",
+              border: viewCount ? "2px solid red" : "2px solid green",
+              borderRadius: "50%",
+            }}
+            onClick={() => handleViewCountChange()}
+          />
         </Box>
 
         <Box sx={{ mt: 2 }}></Box>

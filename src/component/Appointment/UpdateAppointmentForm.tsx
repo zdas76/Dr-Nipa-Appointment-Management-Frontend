@@ -4,7 +4,7 @@ import {
   //   useGetLastVisitingDateQuery,
 } from "../../redux/api/appointment";
 import {
-  // Autocomplete,
+  Autocomplete,
   Box,
   Button,
   FormControl,
@@ -25,8 +25,8 @@ import { useEffect } from "react";
 import { useGetDoctorInforQuery } from "../../redux/api/doctorAPI";
 import { FrontLoader } from "@mui/icons-material";
 // import dayjs from "dayjs";
-// import { useGetAllConnectorQuery } from "../../redux/api/connectorAPI";
-// import type { TConnector } from "../../types/User";
+import { useGetAllConnectorQuery } from "../../redux/api/connectorAPI";
+import type { TConnector } from "../../types/User";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const schema = z.object({
@@ -74,12 +74,10 @@ export default function UpdateAppointmentForm({
     [],
   );
 
-  console.log(data);
-
   const doctorinfo = doctors?.data[0];
 
-  // const { data: connectors, isLoading: isConnectorsLoading } =
-  //   useGetAllConnectorQuery({});
+  const { data: connectors, isLoading: isConnectorsLoading } =
+    useGetAllConnectorQuery({});
 
   const [updateAppointment, { isLoading }] = useUpdateAppointmentMutation();
 
@@ -380,7 +378,7 @@ export default function UpdateAppointmentForm({
                   />
                 </FormControl>
 
-                {/* <Controller
+                <Controller
                   name="connectorId"
                   control={control}
                   render={({ field: { onChange, value } }) => (
@@ -409,7 +407,7 @@ export default function UpdateAppointmentForm({
                       )}
                     />
                   )}
-                /> */}
+                />
               </Box>
             </Box>
 

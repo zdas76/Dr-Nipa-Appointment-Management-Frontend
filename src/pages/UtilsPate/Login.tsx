@@ -82,7 +82,7 @@ export default function Login() {
       <Paper elevation={12} variant="elevation" className="rounded-2xl">
         <Container
           component="main"
-          className="bg-white w-[350px] md:w-[500px] pt-4"
+          className="bg-white w-87.5 md:w-125 pt-4"
           sx={{
             borderBottomLeftRadius: "3rem",
             borderBottomRightRadius: "3rem",

@@ -110,16 +110,21 @@ export default function CreateAppointmentForm({
       visitingTime: dayjs().hour(16).minute(0).format("HH:mm"),
       name: "",
       age: "",
-      sex: "MALE",
+      sex: "FEMALE",
       contactNumber: "",
       address: "",
       patientId: undefined,
     },
   });
 
-  const vDate = useWatch({
+  // const vDate = useWatch({
+  //   control,
+  //   name: "visitingDate",
+  // });
+
+  const patientType = useWatch({
     control,
-    name: "visitingDate",
+    name: "patientType",
   });
 
   useEffect(() => {
@@ -150,23 +155,28 @@ export default function CreateAppointmentForm({
   }, [patientInfo, setValue]);
 
   useEffect(() => {
-    if (lastVisitingDate && vDate) {
-      const expirationDate = dayjs(lastVisitingDate).add(3, "month");
+    // if (lastVisitingDate && vDate) {
+    //   const expirationDate = dayjs(lastVisitingDate).add(3, "month");
 
-      const isAfter = dayjs(vDate).isAfter(expirationDate);
+    //   const isAfter = dayjs(vDate).isAfter(expirationDate);
 
-      if (isAfter) {
-        setValue("patientType", "NEW");
-        setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
-      } else {
-        setValue("patientType", "OLD");
-        setValue("visitingFee", doctorinfo?.oldPatientVisitingFee);
-      }
+    //   if (isAfter) {
+    //     setValue("patientType", "NEW");
+    //     setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
+    //   } else {
+    //     setValue("patientType", "OLD");
+    //     setValue("visitingFee", doctorinfo?.oldPatientVisitingFee);
+    //   }
+    // } else {
+    //   setValue("patientType", "NEW");
+    //   setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
+    // }
+    if (patientType === "OLD") {
+      setValue("visitingFee", doctorinfo?.oldPatientVisitingFee);
     } else {
-      setValue("patientType", "NEW");
       setValue("visitingFee", doctorinfo?.newPatientVisitingFee);
     }
-  }, [lastVisitingDate, vDate, setValue, doctorinfo]);
+  }, [lastVisitingDate, patientType, setValue, doctorinfo]);
 
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -408,7 +418,6 @@ export default function CreateAppointmentForm({
                     defaultValue=""
                     error={!!errors.patientType}
                     helperText={errors.patientType?.message}
-                    disabled
                   >
                     <MenuItem value={"NEW"}>NEW Patient</MenuItem>
                     <MenuItem value={"OLD"}>OLD Patient</MenuItem>
